@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { cadeiaEmCadeia, contexto, troca } from './fixtures';
+import { createDistanceProvider } from './distance';
+import { cadeiaEmCadeia, contexto, ilhaEm, itemsDeTeste, troca } from './fixtures';
 import { createRouteSolver } from './solver';
+import type { Island } from '../models/types';
+import type { RouteContext } from './types';
 
 const solver = createRouteSolver();
 
@@ -96,5 +99,92 @@ describe('solver com sobrepeso', () => {
     expect(plano.trips.length).toBeGreaterThan(1);
     const trocas = plano.trips.flatMap((t) => t.stops.flatMap((s) => s.tradeIds));
     expect(trocas.sort()).toEqual(['tA', 'tB', 'tC']);
+  });
+});
+
+/** Contexto com um mapa desenhado para o teste. */
+function mapa(ilhas: Island[], limites?: Partial<RouteContext['limits']>): RouteContext {
+  return {
+    baseIslandId: 'base',
+    limits: { maxWeightLt: 10_000, slots: 25, ...limites },
+    items: itemsDeTeste,
+    distances: createDistanceProvider([ilhaEm('base', 0, 0), ...ilhas]),
+  };
+}
+
+describe('agrupamento por distância', () => {
+  it('junta as trocas da mesma região em vez de cantos opostos do mapa', () => {
+    const ctx = mapa(
+      [ilhaEm('L1', -100, 0), ilhaEm('L2', -110, 10), ilhaEm('R1', 100, 0), ilhaEm('R2', 110, 10)],
+      { maxWeightLt: 1900 },
+    );
+    // Trocas independentes e iguais: só a posição no mapa muda.
+    const t = (id: string, islandId: string) =>
+      troca({
+        id,
+        islandId,
+        inputItemId: 'i1',
+        inputQtyPerTrade: 1,
+        outputItemId: 'i3',
+        outputQtyPerTrade: 1,
+        hasStock: true,
+      });
+    // Na ordem de entrada, os pares óbvios seriam L1+R1 e L2+R2.
+    const plano = solver.solve([t('l1', 'L1'), t('r1', 'R1'), t('l2', 'L2'), t('r2', 'R2')], ctx);
+
+    expect(plano.trips).toHaveLength(2);
+    const grupos = plano.trips.map((v) =>
+      v.stops
+        .flatMap((s) => s.tradeIds)
+        .sort()
+        .join('+'),
+    );
+    expect(grupos.sort()).toEqual(['l1+l2', 'r1+r2']);
+  });
+
+  it('leva a troca seguinte na mesma viagem quando o item já está a bordo e o desvio é curto', () => {
+    const ctx = mapa([ilhaEm('A', 100, 0), ilhaEm('A2', 110, 0), ilhaEm('B', 0, 900)], {
+      maxWeightLt: 1000,
+    });
+    const tA = troca({ id: 'tA', islandId: 'A', outputItemId: 'i1' });
+    const tA2 = troca({
+      id: 'tA2',
+      islandId: 'A2',
+      inputItemId: 'i1',
+      inputQtyPerTrade: 1,
+      outputItemId: 'i2',
+    });
+    const tB = troca({ id: 'tB', islandId: 'B', outputItemId: 'i3' });
+
+    // Cabem duas trocas por viagem; a ordem de entrada favorece o par tB+tA.
+    const plano = solver.solve([tB, tA, tA2], ctx);
+
+    const viagemDeTA = plano.trips.find((v) => v.stops.some((s) => s.tradeIds.includes('tA')));
+    // tA produz o i1 que tA2 consome: as duas ficam juntas, e tB vai sozinha.
+    expect(viagemDeTA?.stops.flatMap((s) => s.tradeIds)).toEqual(['tA', 'tA2']);
+    expect(plano.totalDistance).toBeLessThan(2100);
+  });
+
+  it('o resultado é estável: o mesmo plano dá sempre o mesmo roteiro', () => {
+    const ctx = mapa([ilhaEm('A', 100, 0), ilhaEm('B', 0, 200), ilhaEm('C', -150, 50)], {
+      maxWeightLt: 1900,
+    });
+    const trades = ['A', 'B', 'C'].map((ilha, i) =>
+      troca({
+        id: `t${i}`,
+        islandId: ilha,
+        inputItemId: 'i1',
+        inputQtyPerTrade: 1,
+        outputItemId: 'i3',
+        outputQtyPerTrade: 1,
+        hasStock: true,
+      }),
+    );
+    const a = solver.solve(trades, ctx);
+    const b = solver.solve(trades, ctx);
+    expect(b.totalDistance).toBe(a.totalDistance);
+    expect(b.trips.map((t) => t.stops.flatMap((s) => s.tradeIds))).toEqual(
+      a.trips.map((t) => t.stops.flatMap((s) => s.tradeIds)),
+    );
   });
 });

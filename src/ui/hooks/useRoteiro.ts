@@ -77,34 +77,33 @@ export function useRoteiro({ usarProgresso = false }: OpcoesDoRoteiro = {}): Rot
   const passosConcluidos = useProgressStore((s) => s.passosConcluidos);
   const ilhas = useIlhas();
 
-  return useMemo(() => {
-    const problemas = validarConfiguracaoDeRota(route, ilhas);
-    const { trades: restantes, concluidas } = replanejar(cadeia.trades, trocasFeitas);
+  const problemas = useMemo(() => validarConfiguracaoDeRota(route, ilhas), [route, ilhas]);
 
-    const trocasPlanejadas = cadeia.trades.reduce((t, x) => t + x.plannedTrades, 0);
-    const feitas = cadeia.trades.reduce(
-      (t, x) => t + Math.min(Math.max(trocasFeitas[x.id] ?? 0, 0), x.plannedTrades),
-      0,
-    );
+  const { restantes, concluidas, trocasPlanejadas, feitas } = useMemo(() => {
+    const { trades, concluidas: feitasIds } = replanejar(cadeia.trades, trocasFeitas);
+    return {
+      restantes: trades,
+      concluidas: feitasIds,
+      trocasPlanejadas: cadeia.trades.reduce((t, x) => t + x.plannedTrades, 0),
+      feitas: cadeia.trades.reduce(
+        (t, x) => t + Math.min(Math.max(trocasFeitas[x.id] ?? 0, 0), x.plannedTrades),
+        0,
+      ),
+    };
+  }, [cadeia.trades, trocasFeitas]);
 
+  const trocasDoRoteiro = usarProgresso ? restantes : cadeia.trades;
+
+  /**
+   * O solver é a parte cara do roteiro (pode levar segundos em planos
+   * grandes), por isso ele fica num memo só dele: marcar um passo no
+   * checklist não recalcula a rota.
+   */
+  const plano = useMemo(() => {
     const base = route.baseIslandId;
-    if (!base || problemas.some((p) => p.code !== 'descarga_sem_armazem')) {
-      return {
-        plano: null,
-        faltas: cadeia.faltas,
-        viagens: [],
-        problemas,
-        restantes,
-        concluidas,
-        trocasPlanejadas,
-        trocasFeitas: feitas,
-        recalculado: usarProgresso,
-      };
-    }
+    if (!base || problemas.some((p) => p.code !== 'descarga_sem_armazem')) return null;
 
-    const trocasDoRoteiro = usarProgresso ? restantes : cadeia.trades;
-
-    const plano = routeSolver.solve(trocasDoRoteiro, {
+    return routeSolver.solve(trocasDoRoteiro, {
       baseIslandId: base,
       // O espaço livre informado nas Configurações é o limite da simulação.
       limits: limitesDoNavio(ship),
@@ -115,11 +114,14 @@ export function useRoteiro({ usarProgresso = false }: OpcoesDoRoteiro = {}): Rot
         .filter((i) => i.hasWharfManager && i.x !== null && i.y !== null)
         .map((i) => i.id),
     });
+  }, [trocasDoRoteiro, problemas, route, ship, items, ilhas]);
 
+  const viagens = useMemo((): ViagemDoRoteiro[] => {
+    if (!plano) return [];
     const porId = new Map(trocasDoRoteiro.map((t) => [t.id, t]));
     let barganha = MAX_BARTER;
 
-    const viagens: ViagemDoRoteiro[] = plano.trips.map((trip) => {
+    return plano.trips.map((trip) => {
       let barganhaDaViagem = 0;
       const passos = trip.steps.map((step, indice): PassoDoRoteiro => {
         const trade = step.kind === 'trade' ? (porId.get(step.tradeId) ?? null) : null;
@@ -151,8 +153,10 @@ export function useRoteiro({ usarProgresso = false }: OpcoesDoRoteiro = {}): Rot
         emSobrepeso: trip.peakWeightLt > ship.freeWeightLt,
       };
     });
+  }, [plano, trocasDoRoteiro, barter, passosConcluidos, ship.freeWeightLt]);
 
-    return {
+  return useMemo(
+    () => ({
       plano,
       faltas: cadeia.faltas,
       viagens,
@@ -162,17 +166,17 @@ export function useRoteiro({ usarProgresso = false }: OpcoesDoRoteiro = {}): Rot
       trocasPlanejadas,
       trocasFeitas: feitas,
       recalculado: usarProgresso,
-    };
-  }, [
-    cadeia.trades,
-    cadeia.faltas,
-    items,
-    barter,
-    ship,
-    route,
-    trocasFeitas,
-    passosConcluidos,
-    ilhas,
-    usarProgresso,
-  ]);
+    }),
+    [
+      plano,
+      cadeia.faltas,
+      viagens,
+      problemas,
+      restantes,
+      concluidas,
+      trocasPlanejadas,
+      feitas,
+      usarProgresso,
+    ],
+  );
 }

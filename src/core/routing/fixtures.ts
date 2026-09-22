@@ -18,6 +18,9 @@ const ilha = (id: string, x: number, y: number): Island => ({
   hasWharfManager: id === 'base',
 });
 
+/** Porto de teste em uma posição qualquer do mapa. */
+export const ilhaEm = (id: string, x: number, y: number): Island => ilha(id, x, y);
+
 /** Base na origem e três ilhas formando um quadrado de lado 100. */
 export const ilhasQuadrado: Island[] = [
   ilha('base', 0, 0),

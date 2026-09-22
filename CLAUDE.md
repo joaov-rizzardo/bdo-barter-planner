@@ -202,14 +202,24 @@ Decisões do usuário que simplificam o cálculo — não reintroduza campos par
 
 ## Rota e carga
 
-- `RouteSolver` é a interface trocável: `createRouteSolver({ maxTrocasExato })` devolve a
-  estratégia padrão. Trocar de algoritmo não toca na UI.
+- `RouteSolver` é a interface trocável: `createRouteSolver({ maxTrocasExato, reinicios,
+  orcamentoMs })` devolve a estratégia padrão. Trocar de algoritmo não toca na UI.
 - Cada **troca** é um nó da ordenação (não a ilha), então uma ilha pode ser visitada mais de
   uma vez na mesma viagem; paradas consecutivas na mesma ilha são agrupadas em `stops`.
 - Precedência: B depende de A quando a saída de A é a entrada de B e B não tem estoque.
   Dependência que ficou em viagem anterior não bloqueia a sequência atual.
-- Divisão em viagens: acumula trocas na viagem enquanto `simularViagem` couber no navio;
-  se a troca não cabe nem sozinha, a viagem é emitida com o aviso `troca_nao_cabe`.
+- Divisão em viagens: **guiada pela distância**. A cada passo o solver escolhe, entre as
+  trocas cuja entrada já está a bordo (carregada na base ou produzida por uma troca já
+  colocada), a que **menos aumenta o percurso** da viagem, e fecha a viagem quando nada mais
+  cabe no navio. Em seguida move e troca cargas entre viagens enquanto a distância total cair
+  (nunca cria viagem nova), e repete a construção com sorteio (GRASP) ficando com a melhor —
+  `reinicios` (12) e `orcamentoMs` (5.000) limitam a busca, que é determinística.
+  Se a troca não cabe nem sozinha, a viagem é emitida com o aviso `troca_nao_cabe`.
+- O que a rota **não** otimiza: número de viagens (nunca aumenta), escolha do porto de cada
+  troca (é sua) e lucro — só distância.
+- Custo: ~0,7 s para 30 trocas em 10 viagens; ~7 s no pior caso testado (40 trocas, 10 por
+  viagem). Por isso `useRoteiro` isola o solver em um `useMemo` próprio: marcar um passo no
+  checklist não recalcula a rota.
 - `simularViagem` calcula o carregamento da base (só o que não é produzido na própria
   viagem), recalcula peso e slots depois de cada passo e registra os picos.
 - Portos sem coordenada entram no roteiro com distância zero e aviso `porto_sem_coordenada`.
