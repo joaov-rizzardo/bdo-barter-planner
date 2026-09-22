@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { ItemIndex } from '../models/itemIndex';
 import type { BarterItem, MarketMaterial } from '../models/types';
-import { adicionar, cabeNoNavio, itensDaCarga, pesoDaCarga, remover, slotsDaCarga } from './cargo';
+import {
+  adicionar,
+  cabeNoNavio,
+  itensDaCarga,
+  limiteDeSobrepeso,
+  limitesDoNavio,
+  melhorTransferencia,
+  pesoDaCarga,
+  remover,
+  slotsDaCarga,
+} from './cargo';
 
 const item = (
   id: string,
@@ -96,5 +106,58 @@ describe('movimentação da carga', () => {
       { itemId: 't4', qty: 2 },
       { itemId: 't5', qty: 1 },
     ]);
+  });
+});
+
+describe('limites do navio', () => {
+  const navio = {
+    freeWeightLt: 10_000,
+    freeSlots: 20,
+    totalWeightLt: 20_000,
+    allowOverweight: false,
+    overweightMode: 'transferencia',
+  } as const;
+
+  it('sem sobrepeso, o limite é o espaço livre', () => {
+    const limites = limitesDoNavio(navio);
+    expect(limites.overweight).toBeUndefined();
+    expect(limiteDeSobrepeso(limites)).toBe(10_000);
+  });
+
+  it('com sobrepeso, sobra meia capacidade total além do espaço livre (150% do total)', () => {
+    const limites = limitesDoNavio({ ...navio, allowOverweight: true });
+    // já a bordo: 20.000 - 10.000; teto de 30.000 => 20.000 de carga planejada
+    expect(limiteDeSobrepeso(limites)).toBe(20_000);
+    expect(limites.overweight?.mode).toBe('transferencia');
+  });
+});
+
+describe('transferência de 1 slot para o inventário', () => {
+  it('leva o pack inteiro quando o item empilha e 1 unidade quando não empilha', () => {
+    expect(melhorTransferencia(new Map([['t4', 12]]), items)).toEqual({ itemId: 't4', qty: 12 });
+    expect(melhorTransferencia(new Map([['t5', 12]]), items)).toEqual({ itemId: 't5', qty: 1 });
+  });
+
+  it('escolhe o pack que tira mais peso', () => {
+    const cargo = new Map([
+      ['t4', 3],
+      ['t5', 2],
+      ['m', 100],
+    ]);
+    expect(melhorTransferencia(cargo, items)).toEqual({ itemId: 't4', qty: 3 });
+  });
+
+  it('não leva o que ainda vai ser gasto nas próximas trocas', () => {
+    const cargo = new Map([
+      ['t4', 3],
+      ['t5', 2],
+    ]);
+    const reservado = new Map([['t4', 3]]);
+    expect(melhorTransferencia(cargo, items, reservado)).toEqual({ itemId: 't5', qty: 1 });
+    expect(melhorTransferencia(cargo, items, new Map([...reservado, ['t5', 2]]))).toBeNull();
+  });
+
+  it('porão vazio não tem o que transferir', () => {
+    expect(melhorTransferencia(new Map(), items)).toBeNull();
   });
 });

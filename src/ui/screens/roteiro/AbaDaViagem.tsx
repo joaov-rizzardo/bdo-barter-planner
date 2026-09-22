@@ -1,3 +1,4 @@
+import { ItemBadge } from '../../components/ItemBadge';
 import type { ViagemDoRoteiro } from '../../hooks/useRoteiro';
 import { fmtInteiro, fmtLt } from '../../format';
 import { PassoDoRoteiroItem } from './PassoDoRoteiroItem';
@@ -9,10 +10,22 @@ export function AbaDaViagem({ viagem }: { viagem: ViagemDoRoteiro }) {
     <div className="rounded-lg border border-mar/60 bg-casco">
       <div className="grid gap-3 border-b border-mar/60 p-4 sm:grid-cols-4">
         <Indicador rotulo="Distância" valor={`${fmtInteiro(Math.round(viagem.distancia))} un.`} />
-        <Indicador rotulo="Pico de peso" valor={fmtLt(viagem.picoPesoLt)} />
+        <Indicador
+          rotulo="Pico de peso"
+          valor={`${fmtLt(viagem.picoPesoLt)}${viagem.emSobrepeso ? ' (sobrepeso)' : ''}`}
+        />
         <Indicador rotulo="Pico de slots" valor={String(viagem.picoSlots)} />
         <Indicador rotulo="Barganha da viagem" valor={fmtInteiro(viagem.barganhaDaViagem)} />
       </div>
+
+      {viagem.inventario.length > 0 ? (
+        <p className="flex flex-wrap items-center gap-2 border-b border-mar/60 px-4 py-2 text-xs text-slate-400">
+          <span>No inventário do personagem (1 slot):</span>
+          {viagem.inventario.map((i) => (
+            <ItemBadge key={i.itemId} itemId={i.itemId} quantidade={i.qty} />
+          ))}
+        </p>
+      ) : null}
 
       <p className="px-4 pt-3 text-xs text-slate-500">
         {concluidos} de {viagem.passos.length} passos concluídos

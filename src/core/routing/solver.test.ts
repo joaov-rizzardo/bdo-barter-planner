@@ -72,3 +72,29 @@ describe('solver de rota', () => {
     expect(plano.trips.flatMap((t) => t.stops.flatMap((s) => s.tradeIds))).toHaveLength(2);
   });
 });
+
+describe('solver com sobrepeso', () => {
+  it('sem sobrepeso, a troca que não cabe vira aviso', () => {
+    const plano = solver.solve([cadeiaEmCadeia[2]!], contexto({ maxWeightLt: 900 }));
+    expect(plano.warnings.map((w) => w.code)).toEqual(['troca_nao_cabe']);
+  });
+
+  it('com sobrepeso liberado, a mesma troca cabe em uma viagem', () => {
+    const plano = solver.solve(
+      [cadeiaEmCadeia[2]!],
+      contexto({ maxWeightLt: 900, overweight: { limitLt: 2000, mode: 'qualquer' } }),
+    );
+    expect(plano.warnings).toEqual([]);
+    expect(plano.trips).toHaveLength(1);
+  });
+
+  it('em sobrepeso sem gerente de cais, o resto da cadeia vai para outra viagem', () => {
+    const plano = solver.solve(
+      cadeiaEmCadeia,
+      contexto({ maxWeightLt: 700, overweight: { limitLt: 2000, mode: 'qualquer' } }),
+    );
+    expect(plano.trips.length).toBeGreaterThan(1);
+    const trocas = plano.trips.flatMap((t) => t.stops.flatMap((s) => s.tradeIds));
+    expect(trocas.sort()).toEqual(['tA', 'tB', 'tC']);
+  });
+});

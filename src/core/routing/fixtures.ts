@@ -61,12 +61,16 @@ export function troca(p: Partial<Trade> & { id: string; islandId: string }): Tra
   };
 }
 
-export function contexto(limites?: Partial<RouteContext['limits']>): RouteContext {
+export function contexto(
+  limites?: Partial<RouteContext['limits']>,
+  gerentesDeCais?: readonly string[],
+): RouteContext {
   return {
     baseIslandId: 'base',
     limits: { maxWeightLt: 10_000, slots: 25, ...limites },
     items: itemsDeTeste,
     distances: createDistanceProvider(ilhasQuadrado),
+    ...(gerentesDeCais ? { wharfIslandIds: gerentesDeCais } : {}),
   };
 }
 

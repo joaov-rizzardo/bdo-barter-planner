@@ -115,10 +115,22 @@ export interface BarterSettings {
   viceCaptainPercent: number;
 }
 
+/**
+ * Como o sobrepeso pode ser usado quando `allowOverweight` está ligado.
+ * `qualquer`: pode ficar em sobrepeso depois de uma troca e só sair dele
+ * depois (transferência ou fim da viagem). `transferencia`: o sobrepeso só é
+ * aceito quando a transferência de 1 slot para o inventário resolve na hora.
+ */
+export type OverweightMode = 'qualquer' | 'transferencia';
+
 /** Capacidade **livre** do navio, usada na simulação de carga. */
 export interface ShipSettings {
   freeWeightLt: number;
   freeSlots: number;
+  /** Capacidade **total** do navio; só serve para o teto de 150% do sobrepeso. */
+  totalWeightLt: number;
+  allowOverweight: boolean;
+  overweightMode: OverweightMode;
 }
 
 /** Ajuste manual das informações de porto que não vêm nos dados do jogo. */

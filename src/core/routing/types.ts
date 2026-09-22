@@ -8,6 +8,11 @@ export interface RouteContext {
   limits: CargoLimits;
   items: ItemIndex;
   distances: DistanceProvider;
+  /**
+   * Portos com gerente de cais, onde dá para passar 1 slot para o inventário
+   * do personagem. Vazio ou ausente: a viagem não conta com a transferência.
+   */
+  wharfIslandIds?: readonly string[];
 }
 
 /** Um passo do roteiro, já com o estado do navio depois de executá-lo. */
@@ -31,6 +36,13 @@ export type TripStep =
       weightLt: number;
       slots: number;
     }
+  | {
+      kind: 'transfer';
+      islandId: string;
+      item: ItemQty;
+      weightLt: number;
+      slots: number;
+    }
   | { kind: 'unload'; islandId: string; items: ItemQty[]; weightLt: number; slots: number };
 
 export interface TripStop {
@@ -44,13 +56,20 @@ export interface Trip {
   steps: TripStep[];
   distance: number;
   loadAtBase: ItemQty[];
+  /** Inclui o que voltou no inventário do personagem. */
   unloadAtBase: ItemQty[];
+  /** Pack de 1 slot levado no inventário do personagem (no máximo um por viagem). */
+  inventory: ItemQty[];
   peakWeightLt: number;
   peakSlots: number;
 }
 
 export type RouteWarningCode =
-  'troca_nao_cabe' | 'porto_sem_coordenada' | 'precedencia_circular' | 'base_invalida';
+  | 'troca_nao_cabe'
+  | 'porto_sem_coordenada'
+  | 'precedencia_circular'
+  | 'base_invalida'
+  | 'sobrepeso';
 
 export interface RouteWarning {
   code: RouteWarningCode;

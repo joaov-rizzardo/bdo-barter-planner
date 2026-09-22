@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { custoPorTroca } from '../../core/barter/cost';
+import { limitesDoNavio, type ItemQty } from '../../core/cargo/cargo';
 import { MAX_BARTER } from '../../core/data/tierRules';
 import { replanejar } from '../../core/progress/replan';
 import { createDistanceProvider } from '../../core/routing/distance';
@@ -33,6 +34,10 @@ export interface ViagemDoRoteiro {
   picoSlots: number;
   passos: PassoDoRoteiro[];
   barganhaDaViagem: number;
+  /** Pack de 1 slot levado no inventário do personagem. */
+  inventario: ItemQty[];
+  /** A viagem passa do peso livre em algum passo (sobrepeso liberado). */
+  emSobrepeso: boolean;
 }
 
 export interface Roteiro {
@@ -102,9 +107,13 @@ export function useRoteiro({ usarProgresso = false }: OpcoesDoRoteiro = {}): Rot
     const plano = routeSolver.solve(trocasDoRoteiro, {
       baseIslandId: base,
       // O espaço livre informado nas Configurações é o limite da simulação.
-      limits: { maxWeightLt: ship.freeWeightLt, slots: ship.freeSlots },
+      limits: limitesDoNavio(ship),
       items,
       distances: createDistanceProvider(ilhas, route.distanceOverrides),
+      // Onde dá para passar 1 slot para o inventário do personagem.
+      wharfIslandIds: ilhas
+        .filter((i) => i.hasWharfManager && i.x !== null && i.y !== null)
+        .map((i) => i.id),
     });
 
     const porId = new Map(trocasDoRoteiro.map((t) => [t.id, t]));
@@ -138,6 +147,8 @@ export function useRoteiro({ usarProgresso = false }: OpcoesDoRoteiro = {}): Rot
         picoSlots: trip.peakSlots,
         passos,
         barganhaDaViagem,
+        inventario: trip.inventory,
+        emSobrepeso: trip.peakWeightLt > ship.freeWeightLt,
       };
     });
 

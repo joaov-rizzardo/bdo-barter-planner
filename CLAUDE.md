@@ -140,7 +140,10 @@ Decisões do usuário que simplificam o cálculo — não reintroduza campos par
 - **Nível de permuta não tem tabela**: o usuário informa à mão a % que o nível dá
   (`BarterSettings.levelReduction`).
 - **Navio**: `freeWeightLt`/`freeSlots` são o espaço **livre**, não a capacidade total, e é
-  isso que vira `CargoLimits` na simulação.
+  isso que vira `CargoLimits` na simulação (`limitesDoNavio`). `totalWeightLt` é a capacidade
+  cheia e **só** serve para o teto de 150% do sobrepeso.
+- **Transferência para o inventário**: sempre disponível, sem opção para desligar; é sempre
+  **1 slot e no máximo uma por viagem**.
 - **Sem importação de dados na UI**: o app usa só os dados embutidos em `src/data/`
   (regerados por `npm run data:convert`).
 
@@ -178,6 +181,24 @@ Decisões do usuário que simplificam o cálculo — não reintroduza campos par
 - O modal de limite de barganha abre no clique de **Calcular rota** (antes de ir para o
   Roteiro) e informa excedente, passo em que a barganha acaba e refreshes necessários.
 - Déficit de item T0 aparece como "comprar" (vem do mercado), não como erro.
+
+## Sobrepeso e inventário do personagem
+
+- `ShipSettings.allowOverweight` (padrão desligado) libera navegar com sobrepeso;
+  `overweightMode` escolhe entre `transferencia` (padrão) e `qualquer`.
+- O teto é **150% da capacidade total**. Como a simulação trabalha sobre o espaço livre e o
+  que já está a bordo é `total - livre`, sobra `livre + 0,5 × total` de carga planejada:
+  é isso que `limitesDoNavio` grava em `CargoLimits.overweight.limitLt`.
+- Depois de uma troca em sobrepeso o navio **trava**: nenhuma outra troca acontece antes de
+  aliviar. No modo `transferencia` o sobrepeso só é aceito quando a transferência resolve na
+  hora; no modo `qualquer` o navio pode seguir em sobrepeso até a base (fim da viagem).
+- Transferência para o inventário: **1 slot**, no gerente de cais mais próximo
+  (`RouteContext.wharfIslandIds`), **uma por viagem**. Item que empilha vai em pack inteiro
+  (12 T4 = 1 slot), item que não empilha vai 1 unidade (12 T5 = 12 slots, não dá). Vale com
+  ou sem sobrepeso — também serve para resolver falta de slot. O pack sai da carga em
+  definitivo: viaja com o personagem e entra em `Trip.inventory` e no descarregamento da base.
+  `melhorTransferencia` nunca leva o que ainda vai ser gasto nas trocas seguintes da viagem.
+- Passo novo no roteiro: `TripStep` com `kind: 'transfer'`.
 
 ## Rota e carga
 

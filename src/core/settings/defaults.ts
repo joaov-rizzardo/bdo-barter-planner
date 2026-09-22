@@ -15,6 +15,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   ship: {
     freeWeightLt: 12_000,
     freeSlots: 25,
+    totalWeightLt: 12_000,
+    allowOverweight: false,
+    overweightMode: 'transferencia',
   },
   route: {
     baseIslandId: null,
@@ -41,6 +44,9 @@ export const appSettingsSchema = z.object({
   ship: z.object({
     freeWeightLt: z.number().positive(),
     freeSlots: z.number().int().positive(),
+    totalWeightLt: z.number().positive(),
+    allowOverweight: z.boolean(),
+    overweightMode: z.enum(['qualquer', 'transferencia']),
   }),
   route: z.object({
     baseIslandId: z.string().nullable(),
@@ -81,6 +87,18 @@ export function normalizeSettings(entrada: unknown): AppSettings {
     DEFAULT_SETTINGS.barter.levelReduction;
   const pesoSalvo = bruto.ship?.freeWeightLt ?? bruto.ship?.maxWeightLt;
   const slotsSalvos = bruto.ship?.freeSlots ?? bruto.ship?.slots;
+  const pesoLivre = limitar(
+    pesoSalvo ?? DEFAULT_SETTINGS.ship.freeWeightLt,
+    1,
+    Number.MAX_SAFE_INTEGER,
+  );
+  // A capacidade total nunca é menor que o espaço livre informado.
+  const pesoTotal = Math.max(
+    limitar(bruto.ship?.totalWeightLt ?? pesoLivre, 1, Number.MAX_SAFE_INTEGER),
+    pesoLivre,
+  );
+  const modoSobrepeso: AppSettings['ship']['overweightMode'] =
+    bruto.ship?.overweightMode === 'qualquer' ? 'qualquer' : 'transferencia';
 
   return {
     barter: {
@@ -89,12 +107,11 @@ export function normalizeSettings(entrada: unknown): AppSettings {
       viceCaptainPercent: limitar(barter.viceCaptainPercent, 0, 100),
     },
     ship: {
-      freeWeightLt: limitar(
-        pesoSalvo ?? DEFAULT_SETTINGS.ship.freeWeightLt,
-        1,
-        Number.MAX_SAFE_INTEGER,
-      ),
+      freeWeightLt: pesoLivre,
       freeSlots: Math.trunc(limitar(slotsSalvos ?? DEFAULT_SETTINGS.ship.freeSlots, 1, 1000)),
+      totalWeightLt: pesoTotal,
+      allowOverweight: bruto.ship?.allowOverweight === true,
+      overweightMode: modoSobrepeso,
     },
     route: {
       baseIslandId: route.baseIslandId ?? null,

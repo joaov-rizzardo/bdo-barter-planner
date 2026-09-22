@@ -1,6 +1,8 @@
 import {
   adicionar,
   itensDaCarga,
+  limiteDeSobrepeso,
+  melhorTransferencia,
   pesoDaCarga,
   remover,
   slotsDaCarga,
@@ -42,10 +44,26 @@ function calcularCarregamento(trades: readonly Trade[]): Map<string, number> {
   return preload;
 }
 
+/** Junta a carga que volta no porão com o pack que veio no inventário. */
+function juntarItens(...listas: readonly ItemQty[][]): ItemQty[] {
+  const total = new Map<string, number>();
+  for (const lista of listas) {
+    for (const { itemId, qty } of lista) total.set(itemId, (total.get(itemId) ?? 0) + qty);
+  }
+  return itensDaCarga(total);
+}
+
 /**
  * Simula uma viagem parada a parada: carrega na base, executa as trocas na
  * ordem recebida, volta e descarrega. Recalcula peso e slots depois de cada
  * passo e falha no primeiro momento em que a carga não couber.
+ *
+ * Sobrepeso (quando ligado nas Configurações): uma troca pode passar do peso
+ * livre até o teto de `limits.overweight.limitLt`, mas o navio fica travado —
+ * nenhuma outra troca acontece antes de aliviar. O alívio é a transferência de
+ * **1 slot** para o inventário do personagem no gerente de cais mais próximo,
+ * uma única vez por viagem; no modo `transferencia` o sobrepeso só é aceito
+ * quando essa transferência devolve o peso para dentro do limite.
  */
 export function simularViagem(
   trades: readonly Trade[],
@@ -53,52 +71,136 @@ export function simularViagem(
   index: number,
 ): SimulacaoResultado {
   const { items, limits, distances, baseIslandId } = ctx;
+  const teto = limiteDeSobrepeso(limits);
+  const modo = limits.overweight?.mode ?? null;
+  const gerentes = ctx.wharfIslandIds ?? [];
+
   const steps: TripStep[] = [];
   let cargo: Cargo = calcularCarregamento(trades);
   let falha: FalhaDeCarga | null = null;
   let picoPeso = 0;
   let picoSlots = 0;
-
-  const medir = (tradeId: string | null): { weightLt: number; slots: number } => {
-    const weightLt = pesoDaCarga(cargo, items);
-    const slots = slotsDaCarga(cargo, items);
-    picoPeso = Math.max(picoPeso, weightLt);
-    picoSlots = Math.max(picoSlots, slots);
-    if (!falha) {
-      if (weightLt > limits.maxWeightLt)
-        falha = { tradeId, motivo: 'peso', pesoLt: weightLt, slots };
-      else if (slots > limits.slots) falha = { tradeId, motivo: 'slots', pesoLt: weightLt, slots };
-    }
-    return { weightLt, slots };
-  };
-
-  const loadAtBase: ItemQty[] = itensDaCarga(cargo);
-  steps.push({ kind: 'load', islandId: baseIslandId, items: loadAtBase, ...medir(null) });
-
   let posicao = baseIslandId;
   let distancia = 0;
+  let emSobrepeso = false;
+  const inventory: ItemQty[] = [];
+
+  const peso = () => pesoDaCarga(cargo, items);
+  const slots = () => slotsDaCarga(cargo, items);
+
+  const medir = (): { weightLt: number; slots: number } => {
+    const estado = { weightLt: peso(), slots: slots() };
+    picoPeso = Math.max(picoPeso, estado.weightLt);
+    picoSlots = Math.max(picoSlots, estado.slots);
+    return estado;
+  };
+
+  const falhar = (
+    tradeId: string | null,
+    motivo: FalhaDeCarga['motivo'],
+    estado: { weightLt: number; slots: number },
+  ) => {
+    falha ??= { tradeId, motivo, pesoLt: estado.weightLt, slots: estado.slots };
+  };
+
+  const navegarPara = (destino: string) => {
+    if (destino === posicao) return;
+    const trecho = distances.between(posicao, destino);
+    distancia += trecho;
+    steps.push({
+      kind: 'sail',
+      fromIslandId: posicao,
+      islandId: destino,
+      distance: trecho,
+      weightLt: peso(),
+      slots: slots(),
+    });
+    posicao = destino;
+  };
+
+  const gerenteMaisProximo = (): string | null => {
+    let melhor: string | null = null;
+    let menor = Infinity;
+    for (const id of gerentes) {
+      const d = distances.between(posicao, id);
+      if (d < menor) {
+        menor = d;
+        melhor = id;
+      }
+    }
+    return melhor;
+  };
+
+  /**
+   * Manda o melhor pack de 1 slot para o inventário, no gerente de cais mais
+   * próximo. `exigirAlivio` só aceita a transferência se o peso voltar para
+   * dentro do limite do navio.
+   */
+  const tentarTransferencia = (
+    exigirAlivio: boolean,
+    reservado: ReadonlyMap<string, number>,
+  ): boolean => {
+    if (inventory.length > 0) return false; // uma transferência por viagem
+    const candidato = melhorTransferencia(cargo, items, reservado);
+    if (!candidato) return false;
+    const restante = remover(cargo, candidato.itemId, candidato.qty);
+    if (!restante) return false;
+    if (exigirAlivio && pesoDaCarga(restante, items) > limits.maxWeightLt) return false;
+
+    const destino = gerenteMaisProximo();
+    if (destino === null) return false;
+    // Sem sobrepeso liberado, só dá para usar o gerente da própria parada:
+    // navegar até outro porto já estouraria o peso.
+    if (!limits.overweight && peso() > limits.maxWeightLt && destino !== posicao) return false;
+
+    navegarPara(destino);
+    cargo = restante;
+    inventory.push(candidato);
+    steps.push({ kind: 'transfer', islandId: destino, item: candidato, ...medir() });
+    emSobrepeso = peso() > limits.maxWeightLt;
+    return true;
+  };
+
+  /** Entradas ainda por gastar a partir da troca `i`: não podem ser transferidas. */
+  const reservas: Map<string, number>[] = [];
+  {
+    let acumulado = new Map<string, number>();
+    for (let i = trades.length - 1; i >= 0; i -= 1) {
+      const trade = trades[i]!;
+      acumulado = new Map(acumulado);
+      acumulado.set(
+        trade.inputItemId,
+        (acumulado.get(trade.inputItemId) ?? 0) + trade.inputQtyPerTrade * trade.plannedTrades,
+      );
+      reservas[i] = acumulado;
+    }
+  }
+  const reservaEm = (i: number): Map<string, number> => reservas[i] ?? new Map();
+
+  const loadAtBase: ItemQty[] = itensDaCarga(cargo);
+  const inicial = medir();
+  steps.push({ kind: 'load', islandId: baseIslandId, items: loadAtBase, ...inicial });
+  if (inicial.weightLt > limits.maxWeightLt) falhar(null, 'peso', inicial);
+  else if (inicial.slots > limits.slots) falhar(null, 'slots', inicial);
+
   const stops: TripStop[] = [];
 
-  for (const trade of trades) {
-    if (trade.islandId !== posicao) {
-      const trecho = distances.between(posicao, trade.islandId);
-      distancia += trecho;
-      steps.push({
-        kind: 'sail',
-        fromIslandId: posicao,
-        islandId: trade.islandId,
-        distance: trecho,
-        weightLt: pesoDaCarga(cargo, items),
-        slots: slotsDaCarga(cargo, items),
-      });
-      posicao = trade.islandId;
+  for (const [i, trade] of trades.entries()) {
+    // Em sobrepeso o navio está travado: ou a transferência alivia, ou a
+    // viagem acaba aqui e a troca fica para a próxima.
+    if (emSobrepeso && !tentarTransferencia(true, reservaEm(i))) {
+      falhar(trade.id, 'peso', medir());
+      emSobrepeso = false;
     }
+
+    navegarPara(trade.islandId);
 
     const entrada = trade.inputQtyPerTrade * trade.plannedTrades;
     const saida = trade.outputQtyPerTrade * trade.plannedTrades;
     cargo = remover(cargo, trade.inputItemId, entrada) ?? cargo;
     cargo = adicionar(cargo, trade.outputItemId, saida);
 
+    const estado = medir();
     steps.push({
       kind: 'trade',
       islandId: trade.islandId,
@@ -106,28 +208,28 @@ export function simularViagem(
       times: trade.plannedTrades,
       input: { itemId: trade.inputItemId, qty: entrada },
       output: { itemId: trade.outputItemId, qty: saida },
-      ...medir(trade.id),
+      ...estado,
     });
+
+    if (estado.weightLt > limits.maxWeightLt) {
+      if (!limits.overweight || estado.weightLt > teto) falhar(trade.id, 'peso', estado);
+      else if (modo === 'transferencia') {
+        if (!tentarTransferencia(true, reservaEm(i + 1))) falhar(trade.id, 'peso', estado);
+      } else emSobrepeso = true;
+    }
+
+    if (slots() > limits.slots && !tentarTransferencia(false, reservaEm(i + 1)))
+      falhar(trade.id, 'slots', estado);
+    if (slots() > limits.slots) falhar(trade.id, 'slots', estado);
 
     const ultima = stops[stops.length - 1];
     if (ultima && ultima.islandId === trade.islandId) ultima.tradeIds.push(trade.id);
     else stops.push({ islandId: trade.islandId, tradeIds: [trade.id] });
   }
 
-  if (posicao !== baseIslandId) {
-    const volta = distances.between(posicao, baseIslandId);
-    distancia += volta;
-    steps.push({
-      kind: 'sail',
-      fromIslandId: posicao,
-      islandId: baseIslandId,
-      distance: volta,
-      weightLt: pesoDaCarga(cargo, items),
-      slots: slotsDaCarga(cargo, items),
-    });
-  }
+  navegarPara(baseIslandId);
 
-  const unloadAtBase = itensDaCarga(cargo);
+  const unloadAtBase = juntarItens(itensDaCarga(cargo), inventory);
   steps.push({
     kind: 'unload',
     islandId: baseIslandId,
@@ -146,6 +248,7 @@ export function simularViagem(
       distance: distancia,
       loadAtBase,
       unloadAtBase,
+      inventory,
       peakWeightLt: picoPeso,
       peakSlots: picoSlots,
     },

@@ -41,3 +41,27 @@ describe('normalização das configurações', () => {
     expect(appSettingsSchema.safeParse(normalizeSettings(null)).success).toBe(true);
   });
 });
+
+describe('sobrepeso nas configurações', () => {
+  it('vem desligado, no modo de transferência', () => {
+    const s = normalizeSettings(null);
+    expect(s.ship.allowOverweight).toBe(false);
+    expect(s.ship.overweightMode).toBe('transferencia');
+  });
+
+  it('configuração antiga ganha capacidade total igual ao espaço livre', () => {
+    const s = normalizeSettings({ ship: { maxWeightLt: 9000, slots: 17 } });
+    expect(s.ship.totalWeightLt).toBe(9000);
+  });
+
+  it('a capacidade total nunca fica abaixo do espaço livre', () => {
+    const s = normalizeSettings({ ship: { freeWeightLt: 9000, totalWeightLt: 5000 } });
+    expect(s.ship.totalWeightLt).toBe(9000);
+  });
+
+  it('modo desconhecido volta para transferência', () => {
+    const s = normalizeSettings({ ship: { allowOverweight: true, overweightMode: 'xpto' } });
+    expect(s.ship.allowOverweight).toBe(true);
+    expect(s.ship.overweightMode).toBe('transferencia');
+  });
+});
