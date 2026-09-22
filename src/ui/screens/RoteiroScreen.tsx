@@ -8,7 +8,10 @@ import { useRoteiro } from '../hooks/useRoteiro';
 import { AbaDaViagem } from './roteiro/AbaDaViagem';
 
 export function RoteiroScreen() {
-  const roteiro = useRoteiro();
+  // O roteiro só é remontado a partir do progresso quando o usuário pede: por
+  // padrão, marcar uma troca apenas a risca, sem tirá-la da lista.
+  const [usarProgresso, setUsarProgresso] = useState(false);
+  const roteiro = useRoteiro({ usarProgresso });
   const trocasDoPlano = usePlanStore((s) => s.trades.length);
   const irPara = useUiStore((s) => s.irPara);
   const limparProgresso = useProgressStore((s) => s.limpar);
@@ -43,7 +46,9 @@ export function RoteiroScreen() {
   }
 
   const viagem = roteiro.viagens[viagemAtiva] ?? roteiro.viagens[0];
-  const tudoFeito = roteiro.viagens.length === 0;
+  // Concluído é a checklist inteira: todos os passos de todas as viagens.
+  const passos = roteiro.viagens.flatMap((v) => v.passos);
+  const tudoFeito = passos.length > 0 && passos.every((p) => p.concluido);
 
   return (
     <div className="space-y-5">
@@ -53,7 +58,9 @@ export function RoteiroScreen() {
 
       <Section
         titulo="Resumo do roteiro"
-        descricao={`Estratégia: ${roteiro.plano.solver}. O progresso é salvo automaticamente.`}
+        descricao={`Estratégia: ${roteiro.plano.solver}. O progresso é salvo automaticamente.${
+          roteiro.recalculado ? '' : ' As trocas marcadas continuam na lista, riscadas.'
+        }`}
       >
         <div className="grid gap-3 sm:grid-cols-4">
           <Indicador rotulo="Viagens" valor={String(roteiro.viagens.length)} />
@@ -90,9 +97,17 @@ export function RoteiroScreen() {
         {roteiro.trocasFeitas > 0 ? (
           <div className="flex flex-wrap items-center gap-3">
             <span className="text-xs text-slate-500">
-              Roteiro recalculado a partir do progresso atual ({fmtInteiro(roteiro.trocasFeitas)}{' '}
-              troca(s) feita(s), {roteiro.concluidas.length} passo(s) concluído(s)).
+              {fmtInteiro(roteiro.trocasFeitas)} troca(s) feita(s), {roteiro.concluidas.length}{' '}
+              troca(s) concluída(s).{' '}
+              {roteiro.recalculado
+                ? 'O roteiro abaixo foi remontado a partir do progresso atual.'
+                : 'O roteiro abaixo é o plano completo.'}
             </span>
+            <TextButton onClick={() => setUsarProgresso(!usarProgresso)}>
+              {roteiro.recalculado
+                ? 'Voltar ao roteiro completo'
+                : 'Recalcular a partir do progresso'}
+            </TextButton>
             <TextButton variante="perigo" onClick={limparProgresso}>
               Limpar progresso
             </TextButton>
@@ -102,9 +117,11 @@ export function RoteiroScreen() {
 
       {tudoFeito ? (
         <Aviso tipo="info">
-          Plano concluído: não sobrou nenhuma troca. Limpe o progresso para rodar de novo.
+          Plano concluído: todas as trocas foram marcadas. Limpe o progresso para rodar de novo.
         </Aviso>
-      ) : (
+      ) : null}
+
+      {roteiro.viagens.length > 0 ? (
         <>
           <nav className="flex flex-wrap gap-1">
             {roteiro.viagens.map((v, i) => {
@@ -131,7 +148,7 @@ export function RoteiroScreen() {
 
           {viagem ? <AbaDaViagem viagem={viagem} /> : null}
         </>
-      )}
+      ) : null}
     </div>
   );
 }

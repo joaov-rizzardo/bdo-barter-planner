@@ -46,13 +46,25 @@ export interface Roteiro {
   concluidas: string[];
   trocasPlanejadas: number;
   trocasFeitas: number;
+  /** `true` quando o roteiro exibido já descontou o progresso marcado. */
+  recalculado: boolean;
+}
+
+export interface OpcoesDoRoteiro {
+  /**
+   * Quando `true`, o solver recebe só o que falta (trocas feitas saem do
+   * roteiro). O padrão é `false`: marcar uma troca **não** a remove da lista,
+   * ela só aparece riscada — o roteiro fica estável durante a viagem.
+   */
+  usarProgresso?: boolean;
 }
 
 /**
- * Monta o roteiro: resolve a cadeia, desconta o progresso já registrado
- * (recalculando o restante a partir do ponto atual) e roda o solver.
+ * Monta o roteiro: resolve a cadeia e roda o solver com o plano inteiro, de
+ * modo que marcar uma troca só a risque na lista. Com `usarProgresso`, o
+ * solver recebe apenas o restante e o roteiro é remontado do ponto atual.
  */
-export function useRoteiro(): Roteiro {
+export function useRoteiro({ usarProgresso = false }: OpcoesDoRoteiro = {}): Roteiro {
   const cadeia = useCadeia();
   const items = useDataStore((s) => s.items);
   const { barter, ship, route } = useSettingsStore((s) => s.settings);
@@ -81,10 +93,13 @@ export function useRoteiro(): Roteiro {
         concluidas,
         trocasPlanejadas,
         trocasFeitas: feitas,
+        recalculado: usarProgresso,
       };
     }
 
-    const plano = routeSolver.solve(restantes, {
+    const trocasDoRoteiro = usarProgresso ? restantes : cadeia.trades;
+
+    const plano = routeSolver.solve(trocasDoRoteiro, {
       baseIslandId: base,
       // O espaço livre informado nas Configurações é o limite da simulação.
       limits: { maxWeightLt: ship.freeWeightLt, slots: ship.freeSlots },
@@ -92,7 +107,7 @@ export function useRoteiro(): Roteiro {
       distances: createDistanceProvider(ilhas, route.distanceOverrides),
     });
 
-    const porId = new Map(restantes.map((t) => [t.id, t]));
+    const porId = new Map(trocasDoRoteiro.map((t) => [t.id, t]));
     let barganha = MAX_BARTER;
 
     const viagens: ViagemDoRoteiro[] = plano.trips.map((trip) => {
@@ -135,6 +150,7 @@ export function useRoteiro(): Roteiro {
       concluidas,
       trocasPlanejadas,
       trocasFeitas: feitas,
+      recalculado: usarProgresso,
     };
   }, [
     cadeia.trades,
@@ -146,5 +162,6 @@ export function useRoteiro(): Roteiro {
     trocasFeitas,
     passosConcluidos,
     ilhas,
+    usarProgresso,
   ]);
 }
