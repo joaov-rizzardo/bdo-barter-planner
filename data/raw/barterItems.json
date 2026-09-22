@@ -1,0 +1,730 @@
+[
+    {
+        "itemId": 3,
+        "name": "Gold Bar 10G",
+        "name_pt": "Barra de Ouro 10G",
+        "weight": 0.2,
+        "icon": "/assets/icons/gold_bar_10g.webp",
+        "routeCount": 7
+    },
+    {
+        "itemId": 4,
+        "name": "Gold Bar 100G",
+        "name_pt": "Barra de Ouro 100G",
+        "weight": 0.75,
+        "icon": "/assets/icons/gold_bar_100g.webp",
+        "routeCount": 36
+    },
+    {
+        "itemId": 5,
+        "name": "Gold Bar 1,000G",
+        "name_pt": "Barra de Ouro 1kG",
+        "weight": 2.5,
+        "icon": "/assets/icons/gold_bar_1_000g.webp",
+        "routeCount": 45
+    },
+    {
+        "itemId": 4052,
+        "name": "Iron Ingot",
+        "name_pt": "Barra de Ferro",
+        "weight": 0.3,
+        "icon": "/assets/icons/iron_ingot.webp",
+        "routeCount": 4
+    },
+    {
+        "itemId": 4055,
+        "name": "Lead Ingot",
+        "name_pt": "Barra de Chumbo",
+        "weight": 0.3,
+        "icon": "/assets/icons/lead_ingot.webp",
+        "routeCount": 4
+    },
+    {
+        "itemId": 4058,
+        "name": "Copper Ingot",
+        "name_pt": "Barra de Cobre",
+        "weight": 0.3,
+        "icon": "/assets/icons/copper_ingot.webp",
+        "routeCount": 4
+    },
+    {
+        "itemId": 4061,
+        "name": "Tin Ingot",
+        "name_pt": "Barra de Estanho",
+        "weight": 0.3,
+        "icon": "/assets/icons/tin_ingot.webp",
+        "routeCount": 12
+    },
+    {
+        "itemId": 4064,
+        "name": "Zinc Ingot",
+        "name_pt": "Barra de Zinco",
+        "weight": 0.3,
+        "icon": "/assets/icons/zinc_ingot.webp",
+        "routeCount": 3
+    },
+    {
+        "itemId": 4066,
+        "name": "Brass Ingot",
+        "name_pt": "Barra de Latão",
+        "weight": 0.3,
+        "icon": "/assets/icons/brass_ingot.webp",
+        "routeCount": 5
+    },
+    {
+        "itemId": 4067,
+        "name": "Bronze Ingot",
+        "name_pt": "Barra de Bronze",
+        "weight": 0.3,
+        "icon": "/assets/icons/bronze_ingot.webp",
+        "routeCount": 4
+    },
+    {
+        "itemId": 4070,
+        "name": "Processed Coal",
+        "name_pt": "Carvão Processado",
+        "weight": 0.3,
+        "icon": "/assets/icons/processed_coal.webp",
+        "routeCount": 3
+    },
+    {
+        "itemId": 4086,
+        "name": "Noc Ingot",
+        "name_pt": "Barra de Ferrugem",
+        "weight": 0.3,
+        "icon": "/assets/icons/noc_ingot.webp",
+        "routeCount": 2
+    },
+    {
+        "itemId": 4273,
+        "name": "Resplendent Obsidian",
+        "name_pt": "Obsidiana Brilhante",
+        "weight": 0.3,
+        "icon": "/assets/icons/resplendent_obsidian.webp",
+        "routeCount": 6
+    },
+    {
+        "itemId": 4414,
+        "name": "Rough Jade",
+        "name_pt": "Pedra de Jade",
+        "weight": 0.3,
+        "icon": "/assets/icons/rough_jade.webp",
+        "routeCount": 3
+    },
+    {
+        "itemId": 4494,
+        "name": "Resplendent Jade",
+        "name_pt": "Jade Brilhante",
+        "weight": 0.3,
+        "icon": "/assets/icons/resplendent_jade.webp",
+        "routeCount": 5
+    },
+    {
+        "itemId": 4612,
+        "name": "Cactus Rind",
+        "name_pt": "Casca de Cacto",
+        "weight": 0.5,
+        "icon": "/assets/icons/cactus_rind.webp",
+        "routeCount": 5
+    },
+    {
+        "itemId": 4655,
+        "name": "Maple Plywood",
+        "name_pt": "Madeira Compensada de Árvore Bordo",
+        "weight": 0.5,
+        "icon": "/assets/icons/maple_plywood.webp",
+        "routeCount": 3
+    },
+    {
+        "itemId": 4658,
+        "name": "Pine Plywood",
+        "name_pt": "Madeira Compensada de Pinheiro",
+        "weight": 0.5,
+        "icon": "/assets/icons/pine_plywood.webp",
+        "routeCount": 6
+    },
+    {
+        "itemId": 4661,
+        "name": "Birch Plywood",
+        "name_pt": "Madeira Compensada de Bétula",
+        "weight": 0.5,
+        "icon": "/assets/icons/birch_plywood.webp",
+        "routeCount": 5
+    },
+    {
+        "itemId": 4664,
+        "name": "Fir Plywood",
+        "name_pt": "Madeira Compensada de Abeto",
+        "weight": 0.5,
+        "icon": "/assets/icons/fir_plywood.webp",
+        "routeCount": 7
+    },
+    {
+        "itemId": 4667,
+        "name": "Cedar Plywood",
+        "name_pt": "Madeira Compensada de Cedro",
+        "weight": 0.5,
+        "icon": "/assets/icons/cedar_plywood.webp",
+        "routeCount": 3
+    },
+    {
+        "itemId": 4671,
+        "name": "Palm Plywood",
+        "name_pt": "Madeira Compensada de Palmeira",
+        "weight": 0.5,
+        "icon": "/assets/icons/palm_plywood.webp",
+        "routeCount": 4
+    },
+    {
+        "itemId": 4674,
+        "name": "Elder Tree Plywood",
+        "name_pt": "Madeira Compensada de Sabugueiro",
+        "weight": 0.5,
+        "icon": "/assets/icons/elder_tree_plywood.webp",
+        "routeCount": 4
+    },
+    {
+        "itemId": 4677,
+        "name": "White Cedar Plywood",
+        "name_pt": "Madeira Compensada de Cedro Branco",
+        "weight": 0.5,
+        "icon": "/assets/icons/white_cedar_plywood.webp",
+        "routeCount": 6
+    },
+    {
+        "itemId": 4683,
+        "name": "Cactus Thorn",
+        "name_pt": "Espinho de Cacto",
+        "weight": 0.5,
+        "icon": "/assets/icons/cactus_thorn.webp",
+        "routeCount": 6
+    },
+    {
+        "itemId": 4695,
+        "name": "Moss Tree Plywood",
+        "name_pt": "Madeira Compensada de Árvore Musgosa",
+        "weight": 0.5,
+        "icon": "/assets/icons/moss_tree_plywood.webp",
+        "routeCount": 6
+    },
+    {
+        "itemId": 4698,
+        "name": "Loopy Tree Plywood",
+        "name_pt": "Madeira Compensada de Árvore-Anel",
+        "weight": 0.5,
+        "icon": "/assets/icons/loopy_tree_plywood.webp",
+        "routeCount": 2
+    },
+    {
+        "itemId": 4702,
+        "name": "Thuja Plywood",
+        "name_pt": "Madeira Compensada de Tuia",
+        "weight": 0.5,
+        "icon": "/assets/icons/thuja_plywood.webp",
+        "routeCount": 1
+    },
+    {
+        "itemId": 4711,
+        "name": "Thornwood Plywood",
+        "name_pt": "Madeira Compensada de Espinheiro",
+        "weight": 0.5,
+        "icon": "/assets/icons/thornwood_plywood.webp",
+        "routeCount": 3
+    },
+    {
+        "itemId": 4722,
+        "name": "Snowfield Cedar Plywood",
+        "name_pt": "Madeira Compensada de Cedro Nevado",
+        "weight": 0.5,
+        "icon": "/assets/icons/snowfield_cedar_plywood.webp",
+        "routeCount": 4
+    },
+    {
+        "itemId": 4725,
+        "name": "Caphras Tree Plywood",
+        "name_pt": "Madeira Compensada de Árvore de Caphras",
+        "weight": 0.5,
+        "icon": "/assets/icons/caphras_tree_plywood.webp",
+        "routeCount": 4
+    },
+    {
+        "itemId": 4801,
+        "name": "Powder of Darkness",
+        "name_pt": "Pó de Escuridão",
+        "weight": 0.1,
+        "icon": "/assets/icons/powder_of_darkness.webp",
+        "routeCount": 3
+    },
+    {
+        "itemId": 4802,
+        "name": "Powder of Flame",
+        "name_pt": "Pó de Chama",
+        "weight": 0.1,
+        "icon": "/assets/icons/powder_of_flame.webp",
+        "routeCount": 2
+    },
+    {
+        "itemId": 4803,
+        "name": "Powder of Rifts",
+        "name_pt": "Pó de Rachadura",
+        "weight": 0.1,
+        "icon": "/assets/icons/powder_of_rifts.webp",
+        "routeCount": 2
+    },
+    {
+        "itemId": 4804,
+        "name": "Powder of Earth",
+        "name_pt": "Pó da Terra",
+        "weight": 0.1,
+        "icon": "/assets/icons/powder_of_earth.webp",
+        "routeCount": 3
+    },
+    {
+        "itemId": 4805,
+        "name": "Powder of Time",
+        "name_pt": "Pó do Tempo",
+        "weight": 0.1,
+        "icon": "/assets/icons/powder_of_time.webp",
+        "routeCount": 4
+    },
+    {
+        "itemId": 5005,
+        "name": "Bloody Tree Knot",
+        "name_pt": "Laço de Árvore Sangrenta",
+        "weight": 0.1,
+        "icon": "/assets/icons/bloody_tree_knot.webp",
+        "routeCount": 2
+    },
+    {
+        "itemId": 5006,
+        "name": "Spirit's Leaf",
+        "name_pt": "Folha de Espírito",
+        "weight": 0.1,
+        "icon": "/assets/icons/spirit_s_leaf.webp",
+        "routeCount": 3
+    },
+    {
+        "itemId": 5008,
+        "name": "Old Tree Bark",
+        "name_pt": "Casca de Árvore Velha",
+        "weight": 0.1,
+        "icon": "/assets/icons/old_tree_bark.webp",
+        "routeCount": 4
+    },
+    {
+        "itemId": 5011,
+        "name": "Red Tree Lump",
+        "name_pt": "Caroço de Árvore Vermelha",
+        "weight": 0.1,
+        "icon": "/assets/icons/red_tree_lump.webp",
+        "routeCount": 1
+    },
+    {
+        "itemId": 5301,
+        "name": "Clear Liquid Reagent",
+        "name_pt": "Reagente Líquido Limpo",
+        "weight": 0.1,
+        "icon": "/assets/icons/clear_liquid_reagent.webp",
+        "routeCount": 6
+    },
+    {
+        "itemId": 5302,
+        "name": "Pure Powder Reagent",
+        "name_pt": "Reagente em pó Puro",
+        "weight": 0.1,
+        "icon": "/assets/icons/pure_powder_reagent.webp",
+        "routeCount": 2
+    },
+    {
+        "itemId": 5804,
+        "name": "Fleece",
+        "name_pt": "Lã",
+        "weight": 0.1,
+        "icon": "/assets/icons/fleece.webp",
+        "routeCount": 4
+    },
+    {
+        "itemId": 5805,
+        "name": "Island Tree Coated Plywood",
+        "name_pt": "Madeira Compensada Revestida de Rubus",
+        "weight": 0.5,
+        "icon": "/assets/icons/island_tree_coated_plywood.webp",
+        "routeCount": 15
+    },
+    {
+        "itemId": 5806,
+        "name": "Rock Salt Ingot",
+        "name_pt": "Barra de Sal Gema",
+        "weight": 0.3,
+        "icon": "/assets/icons/rock_salt_ingot.webp",
+        "routeCount": 12
+    },
+    {
+        "itemId": 5852,
+        "name": "Flax Thread",
+        "name_pt": "Fio de Linho",
+        "weight": 0.1,
+        "icon": "/assets/icons/flax_thread.webp",
+        "routeCount": 5
+    },
+    {
+        "itemId": 5853,
+        "name": "Silk Thread",
+        "name_pt": "Fio de Seda",
+        "weight": 0.1,
+        "icon": "/assets/icons/silk_thread.webp",
+        "routeCount": 3
+    },
+    {
+        "itemId": 5854,
+        "name": "Knitting Yarn",
+        "name_pt": "Fio Tricô",
+        "weight": 0.1,
+        "icon": "/assets/icons/knitting_yarn.webp",
+        "routeCount": 3
+    },
+    {
+        "itemId": 5855,
+        "name": "Cotton Fabric",
+        "name_pt": "Tecido de Algodão",
+        "weight": 0.1,
+        "icon": "/assets/icons/cotton_fabric.webp",
+        "routeCount": 4
+    },
+    {
+        "itemId": 5856,
+        "name": "Flax Fabric",
+        "name_pt": "Tecido de Linho",
+        "weight": 0.1,
+        "icon": "/assets/icons/flax_fabric.webp",
+        "routeCount": 4
+    },
+    {
+        "itemId": 5857,
+        "name": "Silk",
+        "name_pt": "Seda",
+        "weight": 0.1,
+        "icon": "/assets/icons/silk.webp",
+        "routeCount": 3
+    },
+    {
+        "itemId": 5858,
+        "name": "Wool",
+        "name_pt": "Lã",
+        "weight": 0.1,
+        "icon": "/assets/icons/wool.webp",
+        "routeCount": 6
+    },
+    {
+        "itemId": 6151,
+        "name": "Soft Hide",
+        "name_pt": "Couro Macio",
+        "weight": 0.1,
+        "icon": "/assets/icons/soft_hide.webp",
+        "routeCount": 5
+    },
+    {
+        "itemId": 6152,
+        "name": "Tough Hide",
+        "name_pt": "Couro Forte",
+        "weight": 0.1,
+        "icon": "/assets/icons/tough_hide.webp",
+        "routeCount": 8
+    },
+    {
+        "itemId": 6153,
+        "name": "Hard Hide",
+        "name_pt": "Couro Duro",
+        "weight": 0.1,
+        "icon": "/assets/icons/hard_hide.webp",
+        "routeCount": 3
+    },
+    {
+        "itemId": 6155,
+        "name": "Thick Fur",
+        "name_pt": "Pelo Grosso",
+        "weight": 0.1,
+        "icon": "/assets/icons/thick_fur.webp",
+        "routeCount": 3
+    },
+    {
+        "itemId": 6157,
+        "name": "Lightweight Plume",
+        "name_pt": "Pena Leve",
+        "weight": 0.1,
+        "icon": "/assets/icons/lightweight_plume.webp",
+        "routeCount": 3
+    },
+    {
+        "itemId": 6158,
+        "name": "Fancy Feather",
+        "name_pt": "Pena Chique",
+        "weight": 0.1,
+        "icon": "/assets/icons/fancy_feather.webp",
+        "routeCount": 3
+    },
+    {
+        "itemId": 6159,
+        "name": "Fine Soft Hide",
+        "name_pt": "Couro Macio de Qualidade Alta",
+        "weight": 0.1,
+        "icon": "/assets/icons/fine_soft_hide.webp",
+        "routeCount": 3
+    },
+    {
+        "itemId": 6160,
+        "name": "Fine Tough Hide",
+        "name_pt": "Couro Forte de Alta Qualidade",
+        "weight": 0.1,
+        "icon": "/assets/icons/fine_tough_hide.webp",
+        "routeCount": 3
+    },
+    {
+        "itemId": 6161,
+        "name": "Fine Hard Hide",
+        "name_pt": "Couro Duro de Alta Qualidade",
+        "weight": 0.1,
+        "icon": "/assets/icons/fine_hard_hide.webp",
+        "routeCount": 4
+    },
+    {
+        "itemId": 6163,
+        "name": "Fine Thick Fur",
+        "name_pt": "Pele Grosso de Qualidade Alta",
+        "weight": 0.1,
+        "icon": "/assets/icons/fine_thick_fur.webp",
+        "routeCount": 5
+    },
+    {
+        "itemId": 6165,
+        "name": "Fine Lightweight Plume",
+        "name_pt": "Pena Leve de Alta Qualidade",
+        "weight": 0.1,
+        "icon": "/assets/icons/fine_lightweight_plume.webp",
+        "routeCount": 2
+    },
+    {
+        "itemId": 6166,
+        "name": "Fine Fancy Feather",
+        "name_pt": "Pena Chique de Alta Qualidade",
+        "weight": 0.1,
+        "icon": "/assets/icons/fine_fancy_feather.webp",
+        "routeCount": 4
+    },
+    {
+        "itemId": 6185,
+        "name": "Fire Horn",
+        "name_pt": "Chifre de Fogo",
+        "weight": 0.1,
+        "icon": "/assets/icons/fire_horn.webp",
+        "routeCount": 3
+    },
+    {
+        "itemId": 6351,
+        "name": "Legendary Beast's Blood",
+        "name_pt": "Sangue da Fera Lendária",
+        "weight": 0.1,
+        "icon": "/assets/icons/legendary_beast_s_blood.webp",
+        "routeCount": 6
+    },
+    {
+        "itemId": 6353,
+        "name": "Clown's Blood",
+        "name_pt": "Sangue de Palhaço",
+        "weight": 0.1,
+        "icon": "/assets/icons/clown_s_blood.webp",
+        "routeCount": 4
+    },
+    {
+        "itemId": 6354,
+        "name": "Sinner's Blood",
+        "name_pt": "Sangue do Pecador",
+        "weight": 0.1,
+        "icon": "/assets/icons/sinner_s_blood.webp",
+        "routeCount": 6
+    },
+    {
+        "itemId": 6355,
+        "name": "Wise Man's Blood",
+        "name_pt": "Sangue de Homem Sábio",
+        "weight": 0.1,
+        "icon": "/assets/icons/wise_man_s_blood.webp",
+        "routeCount": 5
+    },
+    {
+        "itemId": 7016,
+        "name": "Date Palm",
+        "name_pt": "Tamareira",
+        "weight": 0.1,
+        "icon": "/assets/icons/date_palm.webp",
+        "routeCount": 2
+    },
+    {
+        "itemId": 7017,
+        "name": "Pistachio",
+        "name_pt": "Pistache",
+        "weight": 0.1,
+        "icon": "/assets/icons/pistachio.webp",
+        "routeCount": 3
+    },
+    {
+        "itemId": 7018,
+        "name": "Fig",
+        "name_pt": "Figo",
+        "weight": 0.1,
+        "icon": "/assets/icons/fig.webp",
+        "routeCount": 4
+    },
+    {
+        "itemId": 7019,
+        "name": "Star Anise",
+        "name_pt": "Anis-Estrelado",
+        "weight": 0.1,
+        "icon": "/assets/icons/star_anise.webp",
+        "routeCount": 7
+    },
+    {
+        "itemId": 7020,
+        "name": "Nutmeg",
+        "name_pt": "Noz-Moscada",
+        "weight": 0.1,
+        "icon": "/assets/icons/nutmeg.webp",
+        "routeCount": 4
+    },
+    {
+        "itemId": 7021,
+        "name": "Freekeh",
+        "name_pt": "Freekeh",
+        "weight": 0.1,
+        "icon": "/assets/icons/freekeh.webp",
+        "routeCount": 4
+    },
+    {
+        "itemId": 7026,
+        "name": "Coconut",
+        "name_pt": "Coco",
+        "weight": 0.1,
+        "icon": "/assets/icons/coconut.webp",
+        "routeCount": 4
+    },
+    {
+        "itemId": 7306,
+        "name": "Pumpkin",
+        "name_pt": "Abóbora",
+        "weight": 0.1,
+        "icon": "/assets/icons/pumpkin.webp",
+        "routeCount": 3
+    },
+    {
+        "itemId": 7347,
+        "name": "Aloe",
+        "name_pt": "Aloés",
+        "weight": 0.1,
+        "icon": "/assets/icons/aloe.webp",
+        "routeCount": 4
+    },
+    {
+        "itemId": 7348,
+        "name": "Cinnamon",
+        "name_pt": "Canela",
+        "weight": 0.1,
+        "icon": "/assets/icons/cinnamon.webp",
+        "routeCount": 5
+    },
+    {
+        "itemId": 7702,
+        "name": "Cooking Honey",
+        "name_pt": "Mel de Cozinha",
+        "weight": 0.1,
+        "icon": "/assets/icons/cooking_honey.webp",
+        "routeCount": 4
+    },
+    {
+        "itemId": 7921,
+        "name": "Chicken Meat",
+        "name_pt": "Frango",
+        "weight": 0.03,
+        "icon": "/assets/icons/chicken_meat.webp",
+        "routeCount": 3
+    },
+    {
+        "itemId": 7958,
+        "name": "Ground Bird Meat",
+        "name_pt": "Carne Moída de Pássaro",
+        "weight": 0.03,
+        "icon": "/assets/icons/ground_bird_meat.webp",
+        "routeCount": 3
+    },
+    {
+        "itemId": 7959,
+        "name": "Tiger Meat",
+        "name_pt": "Carne de Tigre",
+        "weight": 0.03,
+        "icon": "/assets/icons/tiger_meat.webp",
+        "routeCount": 6
+    },
+    {
+        "itemId": 9057,
+        "name": "Essence of Liquor",
+        "name_pt": "Essência do Liquor",
+        "weight": 0.01,
+        "icon": "/assets/icons/essence_of_liquor.webp",
+        "routeCount": 7
+    },
+    {
+        "itemId": 9066,
+        "name": "Vinegar",
+        "name_pt": "Vinagre",
+        "weight": 0.01,
+        "icon": "/assets/icons/vinegar.webp",
+        "routeCount": 8
+    },
+    {
+        "itemId": 9213,
+        "name": "Beer",
+        "name_pt": "Cerveja",
+        "weight": 0.1,
+        "icon": "/assets/icons/beer.webp",
+        "routeCount": 6
+    },
+    {
+        "itemId": 9492,
+        "name": "Grilled Bird Meat",
+        "name_pt": "Carne de Pássaro Grelhada",
+        "weight": 0.1,
+        "icon": "/assets/icons/grilled_bird_meat.webp",
+        "routeCount": 10
+    },
+    {
+        "itemId": 9733,
+        "name": "Shining Powder",
+        "name_pt": "Pó Brilhante",
+        "weight": 0.1,
+        "icon": "/assets/icons/shining_powder.webp",
+        "routeCount": 2
+    },
+    {
+        "itemId": 820138,
+        "name": "Mysterious Powder",
+        "name_pt": "Pó Misterioso",
+        "weight": 0.1,
+        "icon": "/assets/icons/mysterious_powder.webp",
+        "routeCount": 6
+    },
+    {
+        "itemId": 820157,
+        "name": "Supreme Boar Hide",
+        "name_pt": "Couro de Javali Supremo",
+        "weight": 0.1,
+        "icon": "/assets/icons/supreme_boar_hide.webp",
+        "routeCount": 8
+    },
+    {
+        "itemId": 820158,
+        "name": "Supreme Bear Hide",
+        "name_pt": "Couro de Urso Supremo",
+        "weight": 0.1,
+        "icon": "/assets/icons/supreme_bear_hide.webp",
+        "routeCount": 9
+    }
+]

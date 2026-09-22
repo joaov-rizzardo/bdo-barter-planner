@@ -1,0 +1,49 @@
+# Gera o .exe do BDO Barter Planner para Windows.
+# Rode em Actions > Build Windows > Run workflow, ou empurre uma tag v*.
+name: Build Windows
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: bdo-barter
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: bdo-barter/package-lock.json
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: bdo-barter/src-tauri
+
+      - run: npm ci
+
+      - name: Testes e checagem de tipos
+        run: |
+          npm run test:run
+          npm run typecheck
+
+      - name: Build do app (exe + instaladores)
+        run: npm run tauri build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bdo-barter-windows
+          if-no-files-found: error
+          path: |
+            bdo-barter/src-tauri/target/release/*.exe
+            bdo-barter/src-tauri/target/release/bundle/nsis/*.exe
+            bdo-barter/src-tauri/target/release/bundle/msi/*.msi

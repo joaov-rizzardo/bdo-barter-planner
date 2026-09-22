@@ -1,0 +1,639 @@
+[
+  {
+    "id": "7306",
+    "name": "Pumpkin",
+    "namePt": "Abóbora",
+    "weightLt": 0.1,
+    "icon": "icons/pumpkin.webp"
+  },
+  {
+    "id": "7347",
+    "name": "Aloe",
+    "namePt": "Aloés",
+    "weightLt": 0.1,
+    "icon": "icons/aloe.webp"
+  },
+  {
+    "id": "7019",
+    "name": "Star Anise",
+    "namePt": "Anis-Estrelado",
+    "weightLt": 0.1,
+    "icon": "icons/star_anise.webp"
+  },
+  {
+    "id": "4067",
+    "name": "Bronze Ingot",
+    "namePt": "Barra de Bronze",
+    "weightLt": 0.3,
+    "icon": "icons/bronze_ingot.webp"
+  },
+  {
+    "id": "4055",
+    "name": "Lead Ingot",
+    "namePt": "Barra de Chumbo",
+    "weightLt": 0.3,
+    "icon": "icons/lead_ingot.webp"
+  },
+  {
+    "id": "4058",
+    "name": "Copper Ingot",
+    "namePt": "Barra de Cobre",
+    "weightLt": 0.3,
+    "icon": "icons/copper_ingot.webp"
+  },
+  {
+    "id": "4061",
+    "name": "Tin Ingot",
+    "namePt": "Barra de Estanho",
+    "weightLt": 0.3,
+    "icon": "icons/tin_ingot.webp"
+  },
+  {
+    "id": "4052",
+    "name": "Iron Ingot",
+    "namePt": "Barra de Ferro",
+    "weightLt": 0.3,
+    "icon": "icons/iron_ingot.webp"
+  },
+  {
+    "id": "4086",
+    "name": "Noc Ingot",
+    "namePt": "Barra de Ferrugem",
+    "weightLt": 0.3,
+    "icon": "icons/noc_ingot.webp"
+  },
+  {
+    "id": "4066",
+    "name": "Brass Ingot",
+    "namePt": "Barra de Latão",
+    "weightLt": 0.3,
+    "icon": "icons/brass_ingot.webp"
+  },
+  {
+    "id": "4",
+    "name": "Gold Bar 100G",
+    "namePt": "Barra de Ouro 100G",
+    "weightLt": 0.75,
+    "icon": "icons/gold_bar_100g.webp"
+  },
+  {
+    "id": "3",
+    "name": "Gold Bar 10G",
+    "namePt": "Barra de Ouro 10G",
+    "weightLt": 0.2,
+    "icon": "icons/gold_bar_10g.webp"
+  },
+  {
+    "id": "5",
+    "name": "Gold Bar 1,000G",
+    "namePt": "Barra de Ouro 1kG",
+    "weightLt": 2.5,
+    "icon": "icons/gold_bar_1_000g.webp"
+  },
+  {
+    "id": "5806",
+    "name": "Rock Salt Ingot",
+    "namePt": "Barra de Sal Gema",
+    "weightLt": 0.3,
+    "icon": "icons/rock_salt_ingot.webp"
+  },
+  {
+    "id": "4064",
+    "name": "Zinc Ingot",
+    "namePt": "Barra de Zinco",
+    "weightLt": 0.3,
+    "icon": "icons/zinc_ingot.webp"
+  },
+  {
+    "id": "7348",
+    "name": "Cinnamon",
+    "namePt": "Canela",
+    "weightLt": 0.1,
+    "icon": "icons/cinnamon.webp"
+  },
+  {
+    "id": "9492",
+    "name": "Grilled Bird Meat",
+    "namePt": "Carne de Pássaro Grelhada",
+    "weightLt": 0.1,
+    "icon": "icons/grilled_bird_meat.webp"
+  },
+  {
+    "id": "7959",
+    "name": "Tiger Meat",
+    "namePt": "Carne de Tigre",
+    "weightLt": 0.03,
+    "icon": "icons/tiger_meat.webp"
+  },
+  {
+    "id": "7958",
+    "name": "Ground Bird Meat",
+    "namePt": "Carne Moída de Pássaro",
+    "weightLt": 0.03,
+    "icon": "icons/ground_bird_meat.webp"
+  },
+  {
+    "id": "5011",
+    "name": "Red Tree Lump",
+    "namePt": "Caroço de Árvore Vermelha",
+    "weightLt": 0.1,
+    "icon": "icons/red_tree_lump.webp"
+  },
+  {
+    "id": "4070",
+    "name": "Processed Coal",
+    "namePt": "Carvão Processado",
+    "weightLt": 0.3,
+    "icon": "icons/processed_coal.webp"
+  },
+  {
+    "id": "5008",
+    "name": "Old Tree Bark",
+    "namePt": "Casca de Árvore Velha",
+    "weightLt": 0.1,
+    "icon": "icons/old_tree_bark.webp"
+  },
+  {
+    "id": "4612",
+    "name": "Cactus Rind",
+    "namePt": "Casca de Cacto",
+    "weightLt": 0.5,
+    "icon": "icons/cactus_rind.webp"
+  },
+  {
+    "id": "9213",
+    "name": "Beer",
+    "namePt": "Cerveja",
+    "weightLt": 0.1,
+    "icon": "icons/beer.webp"
+  },
+  {
+    "id": "6185",
+    "name": "Fire Horn",
+    "namePt": "Chifre de Fogo",
+    "weightLt": 0.1,
+    "icon": "icons/fire_horn.webp"
+  },
+  {
+    "id": "7026",
+    "name": "Coconut",
+    "namePt": "Coco",
+    "weightLt": 0.1,
+    "icon": "icons/coconut.webp"
+  },
+  {
+    "id": "820157",
+    "name": "Supreme Boar Hide",
+    "namePt": "Couro de Javali Supremo",
+    "weightLt": 0.1,
+    "icon": "icons/supreme_boar_hide.webp"
+  },
+  {
+    "id": "820158",
+    "name": "Supreme Bear Hide",
+    "namePt": "Couro de Urso Supremo",
+    "weightLt": 0.1,
+    "icon": "icons/supreme_bear_hide.webp"
+  },
+  {
+    "id": "6153",
+    "name": "Hard Hide",
+    "namePt": "Couro Duro",
+    "weightLt": 0.1,
+    "icon": "icons/hard_hide.webp"
+  },
+  {
+    "id": "6161",
+    "name": "Fine Hard Hide",
+    "namePt": "Couro Duro de Alta Qualidade",
+    "weightLt": 0.1,
+    "icon": "icons/fine_hard_hide.webp"
+  },
+  {
+    "id": "6152",
+    "name": "Tough Hide",
+    "namePt": "Couro Forte",
+    "weightLt": 0.1,
+    "icon": "icons/tough_hide.webp"
+  },
+  {
+    "id": "6160",
+    "name": "Fine Tough Hide",
+    "namePt": "Couro Forte de Alta Qualidade",
+    "weightLt": 0.1,
+    "icon": "icons/fine_tough_hide.webp"
+  },
+  {
+    "id": "6151",
+    "name": "Soft Hide",
+    "namePt": "Couro Macio",
+    "weightLt": 0.1,
+    "icon": "icons/soft_hide.webp"
+  },
+  {
+    "id": "6159",
+    "name": "Fine Soft Hide",
+    "namePt": "Couro Macio de Qualidade Alta",
+    "weightLt": 0.1,
+    "icon": "icons/fine_soft_hide.webp"
+  },
+  {
+    "id": "4683",
+    "name": "Cactus Thorn",
+    "namePt": "Espinho de Cacto",
+    "weightLt": 0.5,
+    "icon": "icons/cactus_thorn.webp"
+  },
+  {
+    "id": "9057",
+    "name": "Essence of Liquor",
+    "namePt": "Essência do Liquor",
+    "weightLt": 0.01,
+    "icon": "icons/essence_of_liquor.webp"
+  },
+  {
+    "id": "7018",
+    "name": "Fig",
+    "namePt": "Figo",
+    "weightLt": 0.1,
+    "icon": "icons/fig.webp"
+  },
+  {
+    "id": "5852",
+    "name": "Flax Thread",
+    "namePt": "Fio de Linho",
+    "weightLt": 0.1,
+    "icon": "icons/flax_thread.webp"
+  },
+  {
+    "id": "5853",
+    "name": "Silk Thread",
+    "namePt": "Fio de Seda",
+    "weightLt": 0.1,
+    "icon": "icons/silk_thread.webp"
+  },
+  {
+    "id": "5854",
+    "name": "Knitting Yarn",
+    "namePt": "Fio Tricô",
+    "weightLt": 0.1,
+    "icon": "icons/knitting_yarn.webp"
+  },
+  {
+    "id": "5006",
+    "name": "Spirit's Leaf",
+    "namePt": "Folha de Espírito",
+    "weightLt": 0.1,
+    "icon": "icons/spirit_s_leaf.webp"
+  },
+  {
+    "id": "7921",
+    "name": "Chicken Meat",
+    "namePt": "Frango",
+    "weightLt": 0.03,
+    "icon": "icons/chicken_meat.webp"
+  },
+  {
+    "id": "7021",
+    "name": "Freekeh",
+    "namePt": "Freekeh",
+    "weightLt": 0.1,
+    "icon": "icons/freekeh.webp"
+  },
+  {
+    "id": "4494",
+    "name": "Resplendent Jade",
+    "namePt": "Jade Brilhante",
+    "weightLt": 0.3,
+    "icon": "icons/resplendent_jade.webp"
+  },
+  {
+    "id": "5804",
+    "name": "Fleece",
+    "namePt": "Lã",
+    "weightLt": 0.1,
+    "icon": "icons/fleece.webp"
+  },
+  {
+    "id": "5858",
+    "name": "Wool",
+    "namePt": "Lã",
+    "weightLt": 0.1,
+    "icon": "icons/wool.webp"
+  },
+  {
+    "id": "5005",
+    "name": "Bloody Tree Knot",
+    "namePt": "Laço de Árvore Sangrenta",
+    "weightLt": 0.1,
+    "icon": "icons/bloody_tree_knot.webp"
+  },
+  {
+    "id": "4664",
+    "name": "Fir Plywood",
+    "namePt": "Madeira Compensada de Abeto",
+    "weightLt": 0.5,
+    "icon": "icons/fir_plywood.webp"
+  },
+  {
+    "id": "4655",
+    "name": "Maple Plywood",
+    "namePt": "Madeira Compensada de Árvore Bordo",
+    "weightLt": 0.5,
+    "icon": "icons/maple_plywood.webp"
+  },
+  {
+    "id": "4725",
+    "name": "Caphras Tree Plywood",
+    "namePt": "Madeira Compensada de Árvore de Caphras",
+    "weightLt": 0.5,
+    "icon": "icons/caphras_tree_plywood.webp"
+  },
+  {
+    "id": "4695",
+    "name": "Moss Tree Plywood",
+    "namePt": "Madeira Compensada de Árvore Musgosa",
+    "weightLt": 0.5,
+    "icon": "icons/moss_tree_plywood.webp"
+  },
+  {
+    "id": "4698",
+    "name": "Loopy Tree Plywood",
+    "namePt": "Madeira Compensada de Árvore-Anel",
+    "weightLt": 0.5,
+    "icon": "icons/loopy_tree_plywood.webp"
+  },
+  {
+    "id": "4661",
+    "name": "Birch Plywood",
+    "namePt": "Madeira Compensada de Bétula",
+    "weightLt": 0.5,
+    "icon": "icons/birch_plywood.webp"
+  },
+  {
+    "id": "4667",
+    "name": "Cedar Plywood",
+    "namePt": "Madeira Compensada de Cedro",
+    "weightLt": 0.5,
+    "icon": "icons/cedar_plywood.webp"
+  },
+  {
+    "id": "4677",
+    "name": "White Cedar Plywood",
+    "namePt": "Madeira Compensada de Cedro Branco",
+    "weightLt": 0.5,
+    "icon": "icons/white_cedar_plywood.webp"
+  },
+  {
+    "id": "4722",
+    "name": "Snowfield Cedar Plywood",
+    "namePt": "Madeira Compensada de Cedro Nevado",
+    "weightLt": 0.5,
+    "icon": "icons/snowfield_cedar_plywood.webp"
+  },
+  {
+    "id": "4711",
+    "name": "Thornwood Plywood",
+    "namePt": "Madeira Compensada de Espinheiro",
+    "weightLt": 0.5,
+    "icon": "icons/thornwood_plywood.webp"
+  },
+  {
+    "id": "4671",
+    "name": "Palm Plywood",
+    "namePt": "Madeira Compensada de Palmeira",
+    "weightLt": 0.5,
+    "icon": "icons/palm_plywood.webp"
+  },
+  {
+    "id": "4658",
+    "name": "Pine Plywood",
+    "namePt": "Madeira Compensada de Pinheiro",
+    "weightLt": 0.5,
+    "icon": "icons/pine_plywood.webp"
+  },
+  {
+    "id": "4674",
+    "name": "Elder Tree Plywood",
+    "namePt": "Madeira Compensada de Sabugueiro",
+    "weightLt": 0.5,
+    "icon": "icons/elder_tree_plywood.webp"
+  },
+  {
+    "id": "4702",
+    "name": "Thuja Plywood",
+    "namePt": "Madeira Compensada de Tuia",
+    "weightLt": 0.5,
+    "icon": "icons/thuja_plywood.webp"
+  },
+  {
+    "id": "5805",
+    "name": "Island Tree Coated Plywood",
+    "namePt": "Madeira Compensada Revestida de Rubus",
+    "weightLt": 0.5,
+    "icon": "icons/island_tree_coated_plywood.webp"
+  },
+  {
+    "id": "7702",
+    "name": "Cooking Honey",
+    "namePt": "Mel de Cozinha",
+    "weightLt": 0.1,
+    "icon": "icons/cooking_honey.webp"
+  },
+  {
+    "id": "7020",
+    "name": "Nutmeg",
+    "namePt": "Noz-Moscada",
+    "weightLt": 0.1,
+    "icon": "icons/nutmeg.webp"
+  },
+  {
+    "id": "4273",
+    "name": "Resplendent Obsidian",
+    "namePt": "Obsidiana Brilhante",
+    "weightLt": 0.3,
+    "icon": "icons/resplendent_obsidian.webp"
+  },
+  {
+    "id": "4414",
+    "name": "Rough Jade",
+    "namePt": "Pedra de Jade",
+    "weightLt": 0.3,
+    "icon": "icons/rough_jade.webp"
+  },
+  {
+    "id": "6163",
+    "name": "Fine Thick Fur",
+    "namePt": "Pele Grosso de Qualidade Alta",
+    "weightLt": 0.1,
+    "icon": "icons/fine_thick_fur.webp"
+  },
+  {
+    "id": "6155",
+    "name": "Thick Fur",
+    "namePt": "Pelo Grosso",
+    "weightLt": 0.1,
+    "icon": "icons/thick_fur.webp"
+  },
+  {
+    "id": "6158",
+    "name": "Fancy Feather",
+    "namePt": "Pena Chique",
+    "weightLt": 0.1,
+    "icon": "icons/fancy_feather.webp"
+  },
+  {
+    "id": "6166",
+    "name": "Fine Fancy Feather",
+    "namePt": "Pena Chique de Alta Qualidade",
+    "weightLt": 0.1,
+    "icon": "icons/fine_fancy_feather.webp"
+  },
+  {
+    "id": "6157",
+    "name": "Lightweight Plume",
+    "namePt": "Pena Leve",
+    "weightLt": 0.1,
+    "icon": "icons/lightweight_plume.webp"
+  },
+  {
+    "id": "6165",
+    "name": "Fine Lightweight Plume",
+    "namePt": "Pena Leve de Alta Qualidade",
+    "weightLt": 0.1,
+    "icon": "icons/fine_lightweight_plume.webp"
+  },
+  {
+    "id": "7017",
+    "name": "Pistachio",
+    "namePt": "Pistache",
+    "weightLt": 0.1,
+    "icon": "icons/pistachio.webp"
+  },
+  {
+    "id": "9733",
+    "name": "Shining Powder",
+    "namePt": "Pó Brilhante",
+    "weightLt": 0.1,
+    "icon": "icons/shining_powder.webp"
+  },
+  {
+    "id": "4804",
+    "name": "Powder of Earth",
+    "namePt": "Pó da Terra",
+    "weightLt": 0.1,
+    "icon": "icons/powder_of_earth.webp"
+  },
+  {
+    "id": "4802",
+    "name": "Powder of Flame",
+    "namePt": "Pó de Chama",
+    "weightLt": 0.1,
+    "icon": "icons/powder_of_flame.webp"
+  },
+  {
+    "id": "4801",
+    "name": "Powder of Darkness",
+    "namePt": "Pó de Escuridão",
+    "weightLt": 0.1,
+    "icon": "icons/powder_of_darkness.webp"
+  },
+  {
+    "id": "4803",
+    "name": "Powder of Rifts",
+    "namePt": "Pó de Rachadura",
+    "weightLt": 0.1,
+    "icon": "icons/powder_of_rifts.webp"
+  },
+  {
+    "id": "4805",
+    "name": "Powder of Time",
+    "namePt": "Pó do Tempo",
+    "weightLt": 0.1,
+    "icon": "icons/powder_of_time.webp"
+  },
+  {
+    "id": "820138",
+    "name": "Mysterious Powder",
+    "namePt": "Pó Misterioso",
+    "weightLt": 0.1,
+    "icon": "icons/mysterious_powder.webp"
+  },
+  {
+    "id": "5302",
+    "name": "Pure Powder Reagent",
+    "namePt": "Reagente em pó Puro",
+    "weightLt": 0.1,
+    "icon": "icons/pure_powder_reagent.webp"
+  },
+  {
+    "id": "5301",
+    "name": "Clear Liquid Reagent",
+    "namePt": "Reagente Líquido Limpo",
+    "weightLt": 0.1,
+    "icon": "icons/clear_liquid_reagent.webp"
+  },
+  {
+    "id": "6351",
+    "name": "Legendary Beast's Blood",
+    "namePt": "Sangue da Fera Lendária",
+    "weightLt": 0.1,
+    "icon": "icons/legendary_beast_s_blood.webp"
+  },
+  {
+    "id": "6355",
+    "name": "Wise Man's Blood",
+    "namePt": "Sangue de Homem Sábio",
+    "weightLt": 0.1,
+    "icon": "icons/wise_man_s_blood.webp"
+  },
+  {
+    "id": "6353",
+    "name": "Clown's Blood",
+    "namePt": "Sangue de Palhaço",
+    "weightLt": 0.1,
+    "icon": "icons/clown_s_blood.webp"
+  },
+  {
+    "id": "6354",
+    "name": "Sinner's Blood",
+    "namePt": "Sangue do Pecador",
+    "weightLt": 0.1,
+    "icon": "icons/sinner_s_blood.webp"
+  },
+  {
+    "id": "5857",
+    "name": "Silk",
+    "namePt": "Seda",
+    "weightLt": 0.1,
+    "icon": "icons/silk.webp"
+  },
+  {
+    "id": "7016",
+    "name": "Date Palm",
+    "namePt": "Tamareira",
+    "weightLt": 0.1,
+    "icon": "icons/date_palm.webp"
+  },
+  {
+    "id": "5855",
+    "name": "Cotton Fabric",
+    "namePt": "Tecido de Algodão",
+    "weightLt": 0.1,
+    "icon": "icons/cotton_fabric.webp"
+  },
+  {
+    "id": "5856",
+    "name": "Flax Fabric",
+    "namePt": "Tecido de Linho",
+    "weightLt": 0.1,
+    "icon": "icons/flax_fabric.webp"
+  },
+  {
+    "id": "9066",
+    "name": "Vinegar",
+    "namePt": "Vinagre",
+    "weightLt": 0.01,
+    "icon": "icons/vinegar.webp"
+  }
+]
