@@ -38,6 +38,48 @@ export function registrarProgresso(
   return novo;
 }
 
+/**
+ * Chave de um passo da checklist. Trocas usam o id da troca; os outros passos
+ * (carregar, navegar, transferir, descarregar) levam as trocas da viagem na
+ * chave, para que um plano novo nunca herde marcações de um plano antigo.
+ */
+export function chaveDoPasso(
+  passo: { kind: 'trade'; tradeId: string } | { kind: string },
+  tradeIdsDaViagem: readonly string[],
+  indice: number,
+): string {
+  if (passo.kind === 'trade' && 'tradeId' in passo) return `t:${passo.tradeId}`;
+  return `${passo.kind}:${tradeIdsDaViagem.map(idOriginalDaTroca).join(',')}:${indice}`;
+}
+
+/** Trocas do plano citadas por uma chave de passo. */
+function trocasDaChave(chave: string): string[] {
+  const [kind, meio = ''] = chave.split(':');
+  if (kind === 't') return [idOriginalDaTroca(meio)];
+  return meio.split(',').filter((id) => id.length > 0);
+}
+
+/**
+ * Tira do progresso tudo o que fala das trocas removidas do plano: as trocas
+ * feitas e os passos marcados em que elas aparecem.
+ */
+export function esquecerTrocas(
+  trocasFeitas: ProgressoDeTrocas,
+  passosConcluidos: Readonly<Record<string, boolean>>,
+  tradeIds: readonly string[],
+): { trocasFeitas: Record<string, number>; passosConcluidos: Record<string, boolean> } {
+  const removidas = new Set(tradeIds);
+  const feitas = Object.fromEntries(
+    Object.entries(trocasFeitas).filter(([id]) => !removidas.has(id)),
+  );
+  const passos = Object.fromEntries(
+    Object.entries(passosConcluidos).filter(
+      ([chave]) => !trocasDaChave(chave).some((id) => removidas.has(id)),
+    ),
+  );
+  return { trocasFeitas: feitas, passosConcluidos: passos };
+}
+
 export interface Replanejamento {
   /** Trocas que ainda faltam, já com o estoque em mãos considerado. */
   trades: Trade[];

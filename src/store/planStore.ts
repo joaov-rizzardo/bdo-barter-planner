@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Trade } from '../core/models/types';
 import { getStore, mensagemDeErro } from './persistence';
+import { useProgressStore } from './progressStore';
 
 const CHAVE = 'plano';
 
@@ -59,8 +60,16 @@ export const usePlanStore = create<PlanState>((set, get) => {
     atualizar: (id, patch) =>
       aplicar(get().trades.map((t) => (t.id === id ? { ...t, ...patch } : t))),
 
-    remover: (id) => aplicar(get().trades.filter((t) => t.id !== id)),
+    // Tirar trocas do plano também apaga o progresso delas: um plano novo
+    // começa com a checklist zerada.
+    remover: (id) => {
+      aplicar(get().trades.filter((t) => t.id !== id));
+      useProgressStore.getState().esquecer([id]);
+    },
 
-    limpar: () => aplicar([]),
+    limpar: () => {
+      aplicar([]);
+      useProgressStore.getState().limpar();
+    },
   };
 });

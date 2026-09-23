@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { custoPorTroca } from '../../core/barter/cost';
 import { limitesDoNavio, type ItemQty } from '../../core/cargo/cargo';
 import { MAX_BARTER } from '../../core/data/tierRules';
-import { replanejar } from '../../core/progress/replan';
+import { chaveDoPasso, replanejar } from '../../core/progress/replan';
 import { createDistanceProvider } from '../../core/routing/distance';
 import { routeSolver } from '../../core/routing/solver';
 import type { RoutePlan, TripStep } from '../../core/routing/types';
@@ -123,6 +123,7 @@ export function useRoteiro({ usarProgresso = false }: OpcoesDoRoteiro = {}): Rot
 
     return plano.trips.map((trip) => {
       let barganhaDaViagem = 0;
+      const tradeIdsDaViagem = trip.stops.flatMap((s) => s.tradeIds);
       const passos = trip.steps.map((step, indice): PassoDoRoteiro => {
         const trade = step.kind === 'trade' ? (porId.get(step.tradeId) ?? null) : null;
         const custoBarganha =
@@ -131,8 +132,7 @@ export function useRoteiro({ usarProgresso = false }: OpcoesDoRoteiro = {}): Rot
             : 0;
         barganha -= custoBarganha;
         barganhaDaViagem += custoBarganha;
-        const key =
-          step.kind === 'trade' ? `t:${step.tradeId}` : `${step.kind}:${trip.index}:${indice}`;
+        const key = chaveDoPasso(step, tradeIdsDaViagem, indice);
         return {
           key,
           step,

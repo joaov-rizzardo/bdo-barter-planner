@@ -3,6 +3,7 @@ import { usePlanStore } from '../../store/planStore';
 import { useProgressStore } from '../../store/progressStore';
 import { useUiStore } from '../../store/uiStore';
 import { Aviso, Section, TextButton } from '../components/controls';
+import { Modal } from '../components/Modal';
 import { fmtInteiro } from '../format';
 import { useRoteiro } from '../hooks/useRoteiro';
 import { AbaDaViagem } from './roteiro/AbaDaViagem';
@@ -15,8 +16,10 @@ export function RoteiroScreen() {
   const trocasDoPlano = usePlanStore((s) => s.trades.length);
   const irPara = useUiStore((s) => s.irPara);
   const limparProgresso = useProgressStore((s) => s.limpar);
+  const limparPlano = usePlanStore((s) => s.limpar);
   const erroPersistencia = useProgressStore((s) => s.erroPersistencia);
   const [viagemAtiva, setViagemAtiva] = useState(0);
+  const [confirmandoConclusao, setConfirmandoConclusao] = useState(false);
 
   // Se o recálculo reduziu o número de viagens, volta para uma aba existente.
   useEffect(() => {
@@ -49,6 +52,14 @@ export function RoteiroScreen() {
   // Concluído é a checklist inteira: todos os passos de todas as viagens.
   const passos = roteiro.viagens.flatMap((v) => v.passos);
   const tudoFeito = passos.length > 0 && passos.every((p) => p.concluido);
+
+  // Concluir encerra a rodada: apaga o plano (e, com ele, todo o progresso).
+  const concluirRoteiro = () => {
+    limparPlano();
+    setUsarProgresso(false);
+    setViagemAtiva(0);
+    setConfirmandoConclusao(false);
+  };
 
   return (
     <div className="space-y-5">
@@ -94,6 +105,19 @@ export function RoteiroScreen() {
           </Aviso>
         ))}
 
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => (tudoFeito ? concluirRoteiro() : setConfirmandoConclusao(true))}
+            className="rounded bg-ouro px-3 py-1.5 text-sm font-semibold text-abismo"
+          >
+            Concluir roteiro
+          </button>
+          <span className="text-xs text-slate-500">
+            Encerra a rodada: apaga o plano e desmarca todos os passos.
+          </span>
+        </div>
+
         {roteiro.trocasFeitas > 0 ? (
           <div className="flex flex-wrap items-center gap-3">
             <span className="text-xs text-slate-500">
@@ -117,7 +141,8 @@ export function RoteiroScreen() {
 
       {tudoFeito ? (
         <Aviso tipo="info">
-          Plano concluído: todas as trocas foram marcadas. Limpe o progresso para rodar de novo.
+          Plano concluído: todas as trocas foram marcadas. Clique em Concluir roteiro para rodar de
+          novo.
         </Aviso>
       ) : null}
 
@@ -148,6 +173,30 @@ export function RoteiroScreen() {
 
           {viagem ? <AbaDaViagem viagem={viagem} /> : null}
         </>
+      ) : null}
+
+      {confirmandoConclusao ? (
+        <Modal
+          titulo="Concluir roteiro"
+          onFechar={() => setConfirmandoConclusao(false)}
+          acoes={
+            <>
+              <TextButton onClick={() => setConfirmandoConclusao(false)}>Voltar</TextButton>
+              <button
+                type="button"
+                onClick={concluirRoteiro}
+                className="rounded bg-ouro px-3 py-1.5 text-sm font-semibold text-abismo"
+              >
+                Concluir e apagar o plano
+              </button>
+            </>
+          }
+        >
+          <p>
+            Ainda há {passos.filter((p) => !p.concluido).length} passo(s) sem marcar. Concluir apaga
+            o plano, desmarca todos os passos e zera as trocas feitas.
+          </p>
+        </Modal>
       ) : null}
     </div>
   );

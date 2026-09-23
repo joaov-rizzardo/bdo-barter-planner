@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { registrarProgresso } from '../core/progress/replan';
+import { esquecerTrocas, registrarProgresso } from '../core/progress/replan';
 import { getStore, mensagemDeErro } from './persistence';
 
 const CHAVE = 'progresso';
@@ -21,6 +21,8 @@ interface ProgressState extends ProgressoSalvo {
    */
   alternarTroca: (tradeId: string, quantidade: number, concluido: boolean) => void;
   marcarPasso: (stepKey: string, concluido: boolean) => void;
+  /** Esquece o progresso das trocas que saíram do plano. */
+  esquecer: (tradeIds: readonly string[]) => void;
   limpar: () => void;
 }
 
@@ -66,6 +68,13 @@ export const useProgressStore = create<ProgressState>((set, get) => {
       else delete passosConcluidos[stepKey];
       set({ passosConcluidos });
       persistir({ trocasFeitas: get().trocasFeitas, passosConcluidos });
+    },
+
+    esquecer: (tradeIds) => {
+      if (tradeIds.length === 0) return;
+      const progresso = esquecerTrocas(get().trocasFeitas, get().passosConcluidos, tradeIds);
+      set(progresso);
+      persistir(progresso);
     },
 
     limpar: () => {

@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { Trade } from '../models/types';
-import { idOriginalDaTroca, registrarProgresso, replanejar } from './replan';
+import {
+  chaveDoPasso,
+  esquecerTrocas,
+  idOriginalDaTroca,
+  registrarProgresso,
+  replanejar,
+} from './replan';
 
 const troca = (p: Partial<Trade> & { id: string }): Trade => ({
   islandId: 'A',
@@ -103,5 +109,24 @@ describe('registro do progresso', () => {
   it('ignora quantidade inválida', () => {
     expect(registrarProgresso({}, 'b', Number.NaN, true)).toEqual({});
     expect(registrarProgresso({ b: 2 }, 'b', -5, true)).toEqual({ b: 2 });
+  });
+});
+
+describe('chaveDoPasso / esquecerTrocas', () => {
+  it('passos fora de troca dependem das trocas da viagem', () => {
+    const load = { kind: 'load' };
+    expect(chaveDoPasso(load, ['a', 'b'], 0)).not.toBe(chaveDoPasso(load, ['c'], 0));
+    expect(chaveDoPasso({ kind: 'trade', tradeId: 'a#estoque' }, ['a'], 1)).toBe('t:a#estoque');
+    expect(chaveDoPasso(load, ['a#estoque', 'b'], 0)).toBe('load:a,b:0');
+  });
+
+  it('esquece trocas feitas e passos que citam as trocas removidas', () => {
+    const r = esquecerTrocas(
+      { a: 3, b: 2 },
+      { 't:a': true, 't:a#estoque': true, 't:b': true, 'load:a,b:0': true, 'sail:b:1': true },
+      ['a'],
+    );
+    expect(r.trocasFeitas).toEqual({ b: 2 });
+    expect(r.passosConcluidos).toEqual({ 't:b': true, 'sail:b:1': true });
   });
 });
