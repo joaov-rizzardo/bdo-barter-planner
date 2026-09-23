@@ -123,12 +123,21 @@ export interface BarterSettings {
  */
 export type OverweightMode = 'qualquer' | 'transferencia';
 
+/** Peso padrão de um marinheiro recém-adicionado. */
+export const PESO_PADRAO_MARINHEIRO_LT = 200;
+
 /** Capacidade **livre** do navio, usada na simulação de carga. */
 export interface ShipSettings {
+  /**
+   * Derivado, somente leitura na UI: `totalWeightLt` menos o peso dos
+   * marinheiros equipados. `normalizeSettings` recalcula a cada escrita.
+   */
   freeWeightLt: number;
   freeSlots: number;
-  /** Capacidade **total** do navio; só serve para o teto de 150% do sobrepeso. */
+  /** Capacidade **total** do navio: base do peso livre e do teto de 150% do sobrepeso. */
   totalWeightLt: number;
+  /** Peso de cada marinheiro equipado (LT). Só o peso importa para o app. */
+  sailorsLt: number[];
   allowOverweight: boolean;
   overweightMode: OverweightMode;
   /** Vender T7 no gerente de cais quando for preciso aliviar o navio. */

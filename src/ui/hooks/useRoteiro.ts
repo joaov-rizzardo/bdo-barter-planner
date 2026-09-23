@@ -40,6 +40,11 @@ export interface ViagemDoRoteiro {
   vendidos: ItemQty[];
   /** A viagem passa do peso livre em algum passo (sobrepeso liberado). */
   emSobrepeso: boolean;
+  /** Marinheiros a desequipar na base antes de sair (0: vai com todos). */
+  marinheirosDesequipados: number;
+  marinheirosDesequipadosLt: number;
+  /** Marinheiros equipados nas Configurações. */
+  marinheirosNoNavio: number;
 }
 
 export interface Roteiro {
@@ -117,6 +122,8 @@ export function useRoteiro({ usarProgresso = false }: OpcoesDoRoteiro = {}): Rot
         .map((i) => i.id),
       // T7 vendidos no gerente de cais quando for preciso aliviar o navio.
       sellT7: ship.sellT7,
+      // Marinheiros que podem ficar na base quando isso faz caber mais trocas.
+      sailorsLt: ship.sailorsLt,
     });
   }, [trocasDoRoteiro, problemas, route, ship, items, ilhas]);
 
@@ -155,10 +162,13 @@ export function useRoteiro({ usarProgresso = false }: OpcoesDoRoteiro = {}): Rot
         barganhaDaViagem,
         inventario: trip.inventory,
         vendidos: trip.sold,
-        emSobrepeso: trip.peakWeightLt > ship.freeWeightLt,
+        emSobrepeso: trip.peakWeightLt > ship.freeWeightLt + trip.sailorsUnequippedLt,
+        marinheirosDesequipados: trip.sailorsUnequipped,
+        marinheirosDesequipadosLt: trip.sailorsUnequippedLt,
+        marinheirosNoNavio: ship.sailorsLt.length,
       };
     });
-  }, [plano, trocasDoRoteiro, barter, passosConcluidos, ship.freeWeightLt]);
+  }, [plano, trocasDoRoteiro, barter, passosConcluidos, ship.freeWeightLt, ship.sailorsLt]);
 
   return useMemo(
     () => ({

@@ -18,6 +18,12 @@ export interface RouteContext {
    * preciso aliviar o navio. Ausente ou `false`: nada é vendido.
    */
   sellT7?: boolean;
+  /**
+   * Peso de cada marinheiro equipado. `limits` já desconta todos eles; o
+   * solver pode planejar a viagem com alguns desequipados na base quando isso
+   * faz caber mais trocas. Ausente ou vazio: ninguém é desequipado.
+   */
+  sailorsLt?: readonly number[];
 }
 
 /** Um passo do roteiro, já com o estado do navio depois de executá-lo. */
@@ -76,6 +82,10 @@ export interface Trip {
   sold: ItemQty[];
   peakWeightLt: number;
   peakSlots: number;
+  /** Marinheiros a desequipar na base antes de sair (os mais pesados primeiro). */
+  sailorsUnequipped: number;
+  /** Peso liberado por esses marinheiros; soma-se ao peso livre da viagem. */
+  sailorsUnequippedLt: number;
 }
 
 export type RouteWarningCode =

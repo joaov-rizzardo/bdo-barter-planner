@@ -141,7 +141,8 @@ Decisões do usuário que simplificam o cálculo — não reintroduza campos par
   (`BarterSettings.levelReduction`).
 - **Navio**: `freeWeightLt`/`freeSlots` são o espaço **livre**, não a capacidade total, e é
   isso que vira `CargoLimits` na simulação (`limitesDoNavio`). `totalWeightLt` é a capacidade
-  cheia e **só** serve para o teto de 150% do sobrepeso.
+  cheia; `freeWeightLt` é **derivado** (`total - soma de sailorsLt`, recalculado em
+  `normalizeSettings`) e fica somente leitura na UI.
 - **Transferência para o inventário**: sempre disponível, sem opção para desligar; é sempre
   **1 slot e no máximo uma por viagem**.
 - **Sem importação de dados na UI**: o app usa só os dados embutidos em `src/data/`
@@ -199,6 +200,20 @@ Decisões do usuário que simplificam o cálculo — não reintroduza campos par
   definitivo: viaja com o personagem e entra em `Trip.inventory` e no descarregamento da base.
   `melhorTransferencia` nunca leva o que ainda vai ser gasto nas trocas seguintes da viagem.
 - Passo novo no roteiro: `TripStep` com `kind: 'transfer'`.
+
+## Marinheiros
+
+- `ShipSettings.sailorsLt`: peso de cada marinheiro equipado (padrão
+  `PESO_PADRAO_MARINHEIRO_LT` = 200, editável um a um). Só o peso importa; velocidade não
+  entra no cálculo.
+- O solver recebe `RouteContext.sailorsLt` e monta as viagens como se **todos** pudessem
+  ficar na base (`comFolga` soma o peso ao livre e ao teto do sobrepeso). Depois, cada viagem
+  recebe o **menor** número de marinheiros a desequipar (mais pesados primeiro) com que cabe
+  **sem** sobrepeso, transferência para o inventário ou venda de T7 — desequipar na base é o
+  alívio mais barato. Se nenhuma quantidade evita esses recursos, fica a que menos depende
+  deles: `Trip.sailorsUnequipped`/`sailorsUnequippedLt`.
+- O roteiro mostra a instrução "desequipe N marinheiros" no topo da viagem, ou, quando cabe
+  com todos, só um lembrete para equipar de volta — nenhum dos dois é passo do checklist.
 
 ## Venda de T7 para aliviar o navio
 

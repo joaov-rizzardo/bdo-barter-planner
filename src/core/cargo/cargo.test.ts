@@ -114,6 +114,7 @@ describe('limites do navio', () => {
     freeWeightLt: 10_000,
     freeSlots: 20,
     totalWeightLt: 20_000,
+    sailorsLt: [] as number[],
     allowOverweight: false,
     overweightMode: 'transferencia',
     sellT7: true,

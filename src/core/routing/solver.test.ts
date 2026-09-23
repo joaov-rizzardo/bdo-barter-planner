@@ -219,4 +219,67 @@ describe('solver com venda de T7', () => {
     expect(comVenda.trips).toHaveLength(1);
     expect(comVenda.trips[0]?.sold).toEqual([{ itemId: 'i7', qty: 2 }]);
   });
+
+  describe('marinheiros', () => {
+    // Cada troca carrega 1.000 materiais (300 LT) na base.
+    const a = troca({ id: 'a', islandId: 'A', inputQtyPerTrade: 1000 });
+    const b = troca({ id: 'b', islandId: 'B', inputQtyPerTrade: 1000 });
+    const comMarinheiros = (maxWeightLt: number, sailorsLt: number[]): RouteContext => ({
+      ...contexto({ maxWeightLt }),
+      sailorsLt,
+    });
+
+    it('desequipa só os marinheiros necessários para caber mais trocas', () => {
+      // Livre: 400 LT. As duas juntas pedem 600: faltam 200, um marinheiro de 250 resolve.
+      const plano = solver.solve([a, b], comMarinheiros(400, [200, 250, 200]));
+
+      expect(plano.trips).toHaveLength(1);
+      expect(plano.trips[0]?.sailorsUnequipped).toBe(1);
+      expect(plano.trips[0]?.sailorsUnequippedLt).toBe(250);
+    });
+
+    it('viagem que cabe com todos a bordo não desequipa ninguém', () => {
+      const plano = solver.solve([a, b], comMarinheiros(1000, [200, 200]));
+
+      expect(plano.trips).toHaveLength(1);
+      expect(plano.trips[0]?.sailorsUnequipped).toBe(0);
+      expect(plano.trips[0]?.sailorsUnequippedLt).toBe(0);
+    });
+
+    it('não junta viagens quando nem todos os marinheiros liberam espaço suficiente', () => {
+      const plano = solver.solve([a, b], comMarinheiros(400, [100]));
+
+      expect(plano.trips).toHaveLength(2);
+      expect(plano.trips.every((t) => t.sailorsUnequipped === 0)).toBe(true);
+    });
+
+    it('prefere desequipar a navegar em sobrepeso e transferir para o inventário', () => {
+      // Carrega 30 LT e recebe um T3 de 900 LT: passa dos 800 livres só depois da troca.
+      const pesada = troca({ id: 'p', islandId: 'A', outputItemId: 'i3' });
+      const ctx: RouteContext = {
+        ...contexto({ maxWeightLt: 800, overweight: { limitLt: 2000, mode: 'transferencia' } }, [
+          'base',
+          'A',
+        ]),
+        sailorsLt: [200, 200],
+      };
+      const comTodos = solver.solve([pesada], { ...ctx, sailorsLt: [] });
+      expect(comTodos.trips[0]?.inventory).toHaveLength(1); // sem marinheiros para tirar
+
+      const plano = solver.solve([pesada], ctx);
+      expect(plano.trips[0]?.sailorsUnequipped).toBe(1);
+      expect(plano.trips[0]?.inventory).toEqual([]);
+    });
+
+    it('a folga dos marinheiros também sobe o teto do sobrepeso', () => {
+      const ctx: RouteContext = {
+        ...contexto({ maxWeightLt: 100, overweight: { limitLt: 200, mode: 'qualquer' } }),
+        sailorsLt: [200],
+      };
+      const plano = solver.solve([a], ctx);
+
+      expect(plano.warnings).toEqual([]);
+      expect(plano.trips[0]?.sailorsUnequipped).toBe(1);
+    });
+  });
 });

@@ -42,6 +42,42 @@ function tentarPercursoInvertido(maisCurta: readonly Trade[], ctx: RouteContext)
   return simulada.ok ? simulada.trip : null;
 }
 
+/**
+ * O mesmo contexto com `folgaLt` a mais de peso livre (marinheiros
+ * desequipados na base). O teto de 150% sobe junto: o que sai do navio é peso
+ * que já estava a bordo.
+ */
+function comFolga(ctx: RouteContext, folgaLt: number): RouteContext {
+  if (folgaLt <= 0) return ctx;
+  const { overweight, ...limites } = ctx.limits;
+  return {
+    ...ctx,
+    limits: {
+      ...limites,
+      maxWeightLt: limites.maxWeightLt + folgaLt,
+      ...(overweight
+        ? { overweight: { ...overweight, limitLt: overweight.limitLt + folgaLt } }
+        : {}),
+    },
+  };
+}
+
+/** Ordena o grupo pela menor distância e simula; `null` quando não cabe no navio. */
+function montarViagem(grupo: readonly Trade[], ctx: RouteContext, maxExato: number): Trip | null {
+  const { ordem } = ordenarTrocas(grupo, ctx.baseIslandId, ctx.distances, maxExato);
+  const simulada = simularViagem(ordem, ctx, 0);
+  if (simulada.ok) return simulada.trip;
+  // Com venda de T7, a ordem decide se a viagem cabe: tenta o sentido inverso.
+  if (
+    ctx.sellT7 &&
+    grupo.length > 1 &&
+    grupo.some((t) => ctx.items.tierOf(t.outputItemId) === 'level_7')
+  ) {
+    return tentarPercursoInvertido(ordem, ctx);
+  }
+  return null;
+}
+
 interface Opcao {
   trade: Trade;
   distancia: number;
@@ -57,6 +93,13 @@ interface Opcao {
  * 3. melhora o resultado movendo e trocando cargas entre as viagens, sem
  *    nunca criar viagem nova;
  * 4. repete a construção com sorteios diferentes e fica com a menor distância.
+ *
+ * Marinheiros (`ctx.sailorsLt`): as viagens são montadas como se todos
+ * pudessem ficar na base, o que faz caber mais trocas por viagem. Depois, cada
+ * viagem recebe o menor número de marinheiros a desequipar (os mais pesados
+ * primeiro) com que ela cabe sem sobrepeso, transferência ou venda de T7 —
+ * zero quando cabe assim com todos a bordo. Se nenhuma quantidade evita esses
+ * recursos, fica a que menos depende deles.
  */
 export function createRouteSolver(options: SolverOptions = {}): RouteSolver {
   const maxExato = options.maxTrocasExato ?? MAX_TROCAS_EXATO;
@@ -65,8 +108,13 @@ export function createRouteSolver(options: SolverOptions = {}): RouteSolver {
 
   return {
     name: `padrao(exato<=${maxExato}, reinicios=${reinicios})`,
-    solve(trades, ctx) {
+    solve(trades, ctxDoNavio) {
       const warnings: RouteWarning[] = [];
+      const marinheiros = [...(ctxDoNavio.sailorsLt ?? [])].sort((a, b) => b - a);
+      const folgaDe = (quantos: number) =>
+        marinheiros.slice(0, quantos).reduce((total, peso) => total + peso, 0);
+      // Planejamento com todos os marinheiros desequipados: o máximo que o navio leva.
+      const ctx = comFolga(ctxDoNavio, folgaDe(marinheiros.length));
 
       if (trades.length === 0) {
         return { solver: this.name, trips: [], totalDistance: 0, warnings };
@@ -117,23 +165,7 @@ export function createRouteSolver(options: SolverOptions = {}): RouteSolver {
           .sort()
           .join('|');
         if (cache.has(chave)) return cache.get(chave) ?? null;
-        const { ordem: sequenciaDaViagem } = ordenarTrocas(
-          grupo,
-          ctx.baseIslandId,
-          ctx.distances,
-          maxExato,
-        );
-        const simulada = simularViagem(sequenciaDaViagem, ctx, 0);
-        let trip = simulada.ok ? simulada.trip : null;
-        // Com venda de T7, a ordem decide se a viagem cabe: tenta o sentido inverso.
-        if (
-          !trip &&
-          ctx.sellT7 &&
-          grupo.length > 1 &&
-          grupo.some((t) => ctx.items.tierOf(t.outputItemId) === 'level_7')
-        ) {
-          trip = tentarPercursoInvertido(sequenciaDaViagem, ctx);
-        }
+        const trip = montarViagem(grupo, ctx, maxExato);
         cache.set(chave, trip);
         return trip;
       };
@@ -338,10 +370,35 @@ export function createRouteSolver(options: SolverOptions = {}): RouteSolver {
       }
 
       const trips: Trip[] = melhores.map((grupo, i) => {
-        const viagem = avaliar(grupo);
-        if (viagem) return { ...viagem, index: i };
+        // Desequipar na base é o alívio mais barato: vem antes de sobrepeso,
+        // transferência para o inventário e venda de T7. Entre as opções de
+        // mesmo custo, fica a que tira menos marinheiros (mais velocidade).
+        let escolhida: { viagem: Trip; quantos: number; custo: number } | null = null;
+        for (let quantos = 0; quantos <= marinheiros.length; quantos += 1) {
+          const ctxDaViagem = comFolga(ctxDoNavio, folgaDe(quantos));
+          const viagem = montarViagem(grupo, ctxDaViagem, maxExato);
+          if (!viagem) continue;
+          const sobrepeso = viagem.peakWeightLt > ctxDaViagem.limits.maxWeightLt ? 1 : 0;
+          const custo = sobrepeso * 1_000 + viagem.inventory.length + viagem.sold.length;
+          if (!escolhida || custo < escolhida.custo) escolhida = { viagem, quantos, custo };
+          if (custo === 0) break;
+        }
+        if (escolhida) {
+          return {
+            ...escolhida.viagem,
+            index: i,
+            sailorsUnequipped: escolhida.quantos,
+            sailorsUnequippedLt: folgaDe(escolhida.quantos),
+          };
+        }
         // Só chega aqui a troca que não cabe nem sozinha.
-        return { ...simularViagem(grupo, ctx, i).trip, index: i };
+        const viagem = simularViagem(grupo, ctx, i).trip;
+        return {
+          ...viagem,
+          index: i,
+          sailorsUnequipped: marinheiros.length,
+          sailorsUnequippedLt: folgaDe(marinheiros.length),
+        };
       });
 
       return {

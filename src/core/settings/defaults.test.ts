@@ -54,9 +54,24 @@ describe('sobrepeso nas configurações', () => {
     expect(s.ship.totalWeightLt).toBe(9000);
   });
 
-  it('a capacidade total nunca fica abaixo do espaço livre', () => {
-    const s = normalizeSettings({ ship: { freeWeightLt: 9000, totalWeightLt: 5000 } });
-    expect(s.ship.totalWeightLt).toBe(9000);
+  it('o peso livre é a capacidade total menos os marinheiros', () => {
+    const s = normalizeSettings({
+      ship: { freeWeightLt: 1, totalWeightLt: 5000, sailorsLt: [200, 250] },
+    });
+    expect(s.ship.freeWeightLt).toBe(4550);
+    expect(s.ship.sailorsLt).toEqual([200, 250]);
+  });
+
+  it('sem marinheiros, o peso livre é a capacidade total', () => {
+    expect(normalizeSettings({ ship: { totalWeightLt: 5000 } }).ship.freeWeightLt).toBe(5000);
+    expect(normalizeSettings(null).ship.sailorsLt).toEqual([]);
+  });
+
+  it('marinheiro com peso inválido volta para o padrão e a capacidade cobre todos', () => {
+    const s = normalizeSettings({ ship: { totalWeightLt: 100, sailorsLt: [Number.NaN, -5] } });
+    expect(s.ship.sailorsLt).toEqual([200, 200]);
+    expect(s.ship.totalWeightLt).toBe(401);
+    expect(s.ship.freeWeightLt).toBe(1);
   });
 
   it('modo desconhecido volta para transferência', () => {

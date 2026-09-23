@@ -1,9 +1,10 @@
 import { z } from 'zod';
-import type { AppSettings } from '../models/types';
+import { PESO_PADRAO_MARINHEIRO_LT, type AppSettings } from '../models/types';
 
 /**
- * Padrões do app. Peso e slots são a capacidade **livre** do navio do usuário:
- * os valores abaixo são só um ponto de partida e devem ser ajustados.
+ * Padrões do app. Os slots são o espaço **livre** do navio; o peso livre é
+ * derivado (capacidade total menos os marinheiros). Os valores abaixo são só
+ * um ponto de partida e devem ser ajustados.
  */
 export const DEFAULT_SETTINGS: AppSettings = {
   barter: {
@@ -16,6 +17,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     freeWeightLt: 12_000,
     freeSlots: 25,
     totalWeightLt: 12_000,
+    sailorsLt: [],
     allowOverweight: false,
     overweightMode: 'transferencia',
     sellT7: true,
@@ -46,6 +48,7 @@ export const appSettingsSchema = z.object({
     freeWeightLt: z.number().positive(),
     freeSlots: z.number().int().positive(),
     totalWeightLt: z.number().positive(),
+    sailorsLt: z.array(z.number().positive()),
     allowOverweight: z.boolean(),
     overweightMode: z.enum(['qualquer', 'transferencia']),
     sellT7: z.boolean(),
@@ -89,16 +92,24 @@ export function normalizeSettings(entrada: unknown): AppSettings {
     DEFAULT_SETTINGS.barter.levelReduction;
   const pesoSalvo = bruto.ship?.freeWeightLt ?? bruto.ship?.maxWeightLt;
   const slotsSalvos = bruto.ship?.freeSlots ?? bruto.ship?.slots;
-  const pesoLivre = limitar(
-    pesoSalvo ?? DEFAULT_SETTINGS.ship.freeWeightLt,
-    1,
-    Number.MAX_SAFE_INTEGER,
+  const marinheiros = (Array.isArray(bruto.ship?.sailorsLt) ? bruto.ship.sailorsLt : []).map(
+    (peso) =>
+      typeof peso === 'number' && Number.isFinite(peso) && peso > 0
+        ? Math.min(peso, 100_000)
+        : PESO_PADRAO_MARINHEIRO_LT,
   );
-  // A capacidade total nunca é menor que o espaço livre informado.
+  const pesoMarinheiros = marinheiros.reduce((total, peso) => total + peso, 0);
+  // Configurações antigas não tinham capacidade total: o peso livre salvo serve de ponto de partida.
   const pesoTotal = Math.max(
-    limitar(bruto.ship?.totalWeightLt ?? pesoLivre, 1, Number.MAX_SAFE_INTEGER),
-    pesoLivre,
+    limitar(
+      bruto.ship?.totalWeightLt ?? pesoSalvo ?? DEFAULT_SETTINGS.ship.totalWeightLt,
+      1,
+      Number.MAX_SAFE_INTEGER,
+    ),
+    pesoMarinheiros + 1,
   );
+  // O peso livre não é mais informado: é a capacidade total menos os marinheiros.
+  const pesoLivre = pesoTotal - pesoMarinheiros;
   const modoSobrepeso: AppSettings['ship']['overweightMode'] =
     bruto.ship?.overweightMode === 'qualquer' ? 'qualquer' : 'transferencia';
 
@@ -112,6 +123,7 @@ export function normalizeSettings(entrada: unknown): AppSettings {
       freeWeightLt: pesoLivre,
       freeSlots: Math.trunc(limitar(slotsSalvos ?? DEFAULT_SETTINGS.ship.freeSlots, 1, 1000)),
       totalWeightLt: pesoTotal,
+      sailorsLt: marinheiros,
       allowOverweight: bruto.ship?.allowOverweight === true,
       overweightMode: modoSobrepeso,
       // Configurações salvas antes da venda de T7 ficam com o padrão (ligado).

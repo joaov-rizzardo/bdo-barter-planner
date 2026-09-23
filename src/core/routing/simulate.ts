@@ -316,6 +316,8 @@ export function simularViagem(
       sold,
       peakWeightLt: picoPeso,
       peakSlots: picoSlots,
+      sailorsUnequipped: 0,
+      sailorsUnequippedLt: 0,
     },
   };
 }

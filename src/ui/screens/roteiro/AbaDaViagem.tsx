@@ -18,6 +18,20 @@ export function AbaDaViagem({ viagem }: { viagem: ViagemDoRoteiro }) {
         <Indicador rotulo="Barganha da viagem" valor={fmtInteiro(viagem.barganhaDaViagem)} />
       </div>
 
+      {viagem.marinheirosDesequipados > 0 ? (
+        <p className="border-b border-mar/60 bg-amber-500/10 px-4 py-2 text-xs text-amber-100">
+          Antes de sair da base: desequipe {viagem.marinheirosDesequipados}{' '}
+          {viagem.marinheirosDesequipados === 1 ? 'marinheiro' : 'marinheiros'} (libera{' '}
+          {fmtLt(viagem.marinheirosDesequipadosLt)}) para caber as trocas desta viagem.
+          {viagem.marinheirosDesequipados > 1 ? ' Comece pelos mais pesados.' : ''}
+        </p>
+      ) : viagem.marinheirosNoNavio > 0 ? (
+        <p className="border-b border-mar/60 px-4 py-2 text-xs text-slate-400">
+          Esta viagem cabe com todos os marinheiros: se desequipou algum, equipe de volta antes de
+          sair da base.
+        </p>
+      ) : null}
+
       {viagem.inventario.length > 0 ? (
         <p className="flex flex-wrap items-center gap-2 border-b border-mar/60 px-4 py-2 text-xs text-slate-400">
           <span>No inventário do personagem (1 slot):</span>
