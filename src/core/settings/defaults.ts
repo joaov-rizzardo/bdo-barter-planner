@@ -18,6 +18,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     totalWeightLt: 12_000,
     allowOverweight: false,
     overweightMode: 'transferencia',
+    sellT7: true,
   },
   route: {
     baseIslandId: null,
@@ -47,6 +48,7 @@ export const appSettingsSchema = z.object({
     totalWeightLt: z.number().positive(),
     allowOverweight: z.boolean(),
     overweightMode: z.enum(['qualquer', 'transferencia']),
+    sellT7: z.boolean(),
   }),
   route: z.object({
     baseIslandId: z.string().nullable(),
@@ -112,6 +114,9 @@ export function normalizeSettings(entrada: unknown): AppSettings {
       totalWeightLt: pesoTotal,
       allowOverweight: bruto.ship?.allowOverweight === true,
       overweightMode: modoSobrepeso,
+      // Configurações salvas antes da venda de T7 ficam com o padrão (ligado).
+      sellT7:
+        typeof bruto.ship?.sellT7 === 'boolean' ? bruto.ship.sellT7 : DEFAULT_SETTINGS.ship.sellT7,
     },
     route: {
       baseIslandId: route.baseIslandId ?? null,

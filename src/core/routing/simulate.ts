@@ -6,6 +6,7 @@ import {
   pesoDaCarga,
   remover,
   slotsDaCarga,
+  t7Vendaveis,
   type Cargo,
   type ItemQty,
 } from '../cargo/cargo';
@@ -64,6 +65,13 @@ function juntarItens(...listas: readonly ItemQty[][]): ItemQty[] {
  * **1 slot** para o inventário do personagem no gerente de cais mais próximo,
  * uma única vez por viagem; no modo `transferencia` o sobrepeso só é aceito
  * quando essa transferência devolve o peso para dentro do limite.
+ *
+ * Venda de T7 (quando `ctx.sellT7`): só acontece quando é preciso aliviar, em
+ * dois momentos — **antes** de uma troca que deixaria o navio acima do peso ou
+ * dos slots (para na doca que menos desvia do caminho até o porto da troca) e
+ * **depois** de uma troca que deixou o navio pesado, se o próprio porto tem
+ * gerente de cais. O vendido sai da carga e não volta para a base. T7 que
+ * ainda vai ser gasto numa troca seguinte da viagem nunca é vendido.
  */
 export function simularViagem(
   trades: readonly Trade[],
@@ -84,6 +92,7 @@ export function simularViagem(
   let distancia = 0;
   let emSobrepeso = false;
   const inventory: ItemQty[] = [];
+  const sold: ItemQty[] = [];
 
   const peso = () => pesoDaCarga(cargo, items);
   const slots = () => slotsDaCarga(cargo, items);
@@ -129,6 +138,42 @@ export function simularViagem(
       }
     }
     return melhor;
+  };
+
+  /** Gerente de cais que menos alonga o caminho da posição atual até `destino`. */
+  const docaNoCaminho = (destino: string): string | null => {
+    let melhor: string | null = null;
+    let menor = Infinity;
+    for (const id of gerentes) {
+      const d = distances.between(posicao, id) + distances.between(id, destino);
+      if (d < menor) {
+        menor = d;
+        melhor = id;
+      }
+    }
+    return melhor;
+  };
+
+  /**
+   * Vende os T7 livres num gerente de cais. Com `destino`, vai até a doca que
+   * menos desvia do caminho até lá; sem `destino`, só vende se a parada atual
+   * tiver gerente de cais (o navio pesado não pode sair navegando).
+   */
+  const venderT7 = (destino: string | null, reservado: ReadonlyMap<string, number>): boolean => {
+    if (!ctx.sellT7) return false;
+    const vendaveis = t7Vendaveis(cargo, items, reservado);
+    if (vendaveis.length === 0) return false;
+
+    const doca =
+      destino === null ? (gerentes.includes(posicao) ? posicao : null) : docaNoCaminho(destino);
+    if (doca === null) return false;
+
+    navegarPara(doca);
+    for (const { itemId, qty } of vendaveis) cargo = remover(cargo, itemId, qty) ?? cargo;
+    sold.push(...vendaveis);
+    steps.push({ kind: 'sell', islandId: doca, items: vendaveis, ...medir() });
+    emSobrepeso = peso() > limits.maxWeightLt;
+    return true;
   };
 
   /**
@@ -186,6 +231,24 @@ export function simularViagem(
   const stops: TripStop[] = [];
 
   for (const [i, trade] of trades.entries()) {
+    const entrada = trade.inputQtyPerTrade * trade.plannedTrades;
+    const saida = trade.outputQtyPerTrade * trade.plannedTrades;
+
+    // Venda antecipada: se a troca vai deixar o navio pesado (ou ele já está
+    // em sobrepeso), vende os T7 livres no caminho até o porto da troca.
+    const depois = adicionar(
+      remover(cargo, trade.inputItemId, entrada) ?? cargo,
+      trade.outputItemId,
+      saida,
+    );
+    if (
+      emSobrepeso ||
+      pesoDaCarga(depois, items) > limits.maxWeightLt ||
+      slotsDaCarga(depois, items) > limits.slots
+    ) {
+      venderT7(trade.islandId, reservaEm(i));
+    }
+
     // Em sobrepeso o navio está travado: ou a transferência alivia, ou a
     // viagem acaba aqui e a troca fica para a próxima.
     if (emSobrepeso && !tentarTransferencia(true, reservaEm(i))) {
@@ -195,8 +258,6 @@ export function simularViagem(
 
     navegarPara(trade.islandId);
 
-    const entrada = trade.inputQtyPerTrade * trade.plannedTrades;
-    const saida = trade.outputQtyPerTrade * trade.plannedTrades;
     cargo = remover(cargo, trade.inputItemId, entrada) ?? cargo;
     cargo = adicionar(cargo, trade.outputItemId, saida);
 
@@ -211,7 +272,10 @@ export function simularViagem(
       ...estado,
     });
 
-    if (estado.weightLt > limits.maxWeightLt) {
+    // Venda na hora: a troca deixou o navio pesado e o porto tem gerente de cais.
+    if (peso() > limits.maxWeightLt || slots() > limits.slots) venderT7(null, reservaEm(i + 1));
+
+    if (peso() > limits.maxWeightLt) {
       if (!limits.overweight || estado.weightLt > teto) falhar(trade.id, 'peso', estado);
       else if (modo === 'transferencia') {
         if (!tentarTransferencia(true, reservaEm(i + 1))) falhar(trade.id, 'peso', estado);
@@ -249,6 +313,7 @@ export function simularViagem(
       loadAtBase,
       unloadAtBase,
       inventory,
+      sold,
       peakWeightLt: picoPeso,
       peakSlots: picoSlots,
     },

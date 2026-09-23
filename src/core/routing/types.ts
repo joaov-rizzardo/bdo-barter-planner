@@ -13,6 +13,11 @@ export interface RouteContext {
    * do personagem. Vazio ou ausente: a viagem não conta com a transferência.
    */
   wharfIslandIds?: readonly string[];
+  /**
+   * Permite vender T7 nos gerentes de cais (`wharfIslandIds`) quando é
+   * preciso aliviar o navio. Ausente ou `false`: nada é vendido.
+   */
+  sellT7?: boolean;
 }
 
 /** Um passo do roteiro, já com o estado do navio depois de executá-lo. */
@@ -43,6 +48,13 @@ export type TripStep =
       weightLt: number;
       slots: number;
     }
+  | {
+      kind: 'sell';
+      islandId: string;
+      items: ItemQty[];
+      weightLt: number;
+      slots: number;
+    }
   | { kind: 'unload'; islandId: string; items: ItemQty[]; weightLt: number; slots: number };
 
 export interface TripStop {
@@ -60,6 +72,8 @@ export interface Trip {
   unloadAtBase: ItemQty[];
   /** Pack de 1 slot levado no inventário do personagem (no máximo um por viagem). */
   inventory: ItemQty[];
+  /** T7 vendidos no gerente de cais para aliviar o navio (não voltam à base). */
+  sold: ItemQty[];
   peakWeightLt: number;
   peakSlots: number;
 }

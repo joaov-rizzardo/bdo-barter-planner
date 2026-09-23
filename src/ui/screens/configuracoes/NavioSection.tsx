@@ -69,6 +69,19 @@ export function NavioSection() {
         />
       </Field>
 
+      <Field
+        label="Vender T7 para aliviar"
+        hint="Só quando for preciso: antes de uma troca que deixaria o navio pesado, ou logo depois dela se o porto tiver gerente de cais. A venda é no gerente de cais que menos desvia do caminho."
+        htmlFor="vender-t7"
+      >
+        <Toggle
+          id="vender-t7"
+          checked={ship.sellT7}
+          label={ship.sellT7 ? 'Vender quando precisar' : 'Não vender'}
+          onChange={(v) => setShip({ sellT7: v })}
+        />
+      </Field>
+
       {ship.allowOverweight ? (
         <>
           <Field label="Quando usar o sobrepeso" htmlFor="modo-sobrepeso">

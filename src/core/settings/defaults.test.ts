@@ -65,3 +65,14 @@ describe('sobrepeso nas configurações', () => {
     expect(s.ship.overweightMode).toBe('transferencia');
   });
 });
+
+describe('venda de T7 nas configurações', () => {
+  it('vem ligada, inclusive em configurações salvas antes dela', () => {
+    expect(normalizeSettings(null).ship.sellT7).toBe(true);
+    expect(normalizeSettings({ ship: { freeWeightLt: 9000 } }).ship.sellT7).toBe(true);
+  });
+
+  it('respeita quando o usuário desliga', () => {
+    expect(normalizeSettings({ ship: { sellT7: false } }).ship.sellT7).toBe(false);
+  });
+});

@@ -27,6 +27,15 @@ export function AbaDaViagem({ viagem }: { viagem: ViagemDoRoteiro }) {
         </p>
       ) : null}
 
+      {viagem.vendidos.length > 0 ? (
+        <p className="flex flex-wrap items-center gap-2 border-b border-mar/60 px-4 py-2 text-xs text-slate-400">
+          <span>Vendidos no gerente de cais:</span>
+          {viagem.vendidos.map((i, n) => (
+            <ItemBadge key={`${i.itemId}-${n}`} itemId={i.itemId} quantidade={i.qty} />
+          ))}
+        </p>
+      ) : null}
+
       <p className="px-4 pt-3 text-xs text-slate-500">
         {concluidos} de {viagem.passos.length} passos concluídos
       </p>

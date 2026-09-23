@@ -188,3 +188,35 @@ describe('agrupamento por distância', () => {
     );
   });
 });
+
+describe('solver com venda de T7', () => {
+  const trades = [
+    troca({
+      id: 't7',
+      islandId: 'A',
+      inputItemId: 'i1',
+      inputQtyPerTrade: 1,
+      outputItemId: 'i7',
+      plannedTrades: 2,
+      hasStock: true,
+    }),
+    troca({
+      id: 't6',
+      islandId: 'C',
+      inputItemId: 'i1',
+      inputQtyPerTrade: 1,
+      outputItemId: 'i6',
+      plannedTrades: 2,
+      hasStock: true,
+    }),
+  ];
+
+  it('vendendo os T7 no caminho, as duas trocas cabem numa viagem só', () => {
+    const semVenda = solver.solve(trades, contexto({ maxWeightLt: 5000 }, ['B']));
+    const comVenda = solver.solve(trades, contexto({ maxWeightLt: 5000 }, ['B'], true));
+
+    expect(semVenda.trips).toHaveLength(2);
+    expect(comVenda.trips).toHaveLength(1);
+    expect(comVenda.trips[0]?.sold).toEqual([{ itemId: 'i7', qty: 2 }]);
+  });
+});

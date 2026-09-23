@@ -46,6 +46,8 @@ export const itemsDeTeste = new ItemIndex(
     barterItem('i2', 'level_2', 400, true),
     barterItem('i3', 'level_3', 900, true),
     barterItem('i5', 'level_5', 1000, false),
+    barterItem('i6', 'level_6', 2000, false),
+    barterItem('i7', 'level_7', 2000, false),
   ],
   materiais,
 );
@@ -67,6 +69,7 @@ export function troca(p: Partial<Trade> & { id: string; islandId: string }): Tra
 export function contexto(
   limites?: Partial<RouteContext['limits']>,
   gerentesDeCais?: readonly string[],
+  venderT7 = false,
 ): RouteContext {
   return {
     baseIslandId: 'base',
@@ -74,6 +77,7 @@ export function contexto(
     items: itemsDeTeste,
     distances: createDistanceProvider(ilhasQuadrado),
     ...(gerentesDeCais ? { wharfIslandIds: gerentesDeCais } : {}),
+    ...(venderT7 ? { sellT7: true } : {}),
   };
 }
 

@@ -116,6 +116,7 @@ describe('limites do navio', () => {
     totalWeightLt: 20_000,
     allowOverweight: false,
     overweightMode: 'transferencia',
+    sellT7: true,
   } as const;
 
   it('sem sobrepeso, o limite é o espaço livre', () => {

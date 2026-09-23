@@ -131,6 +131,8 @@ export interface ShipSettings {
   totalWeightLt: number;
   allowOverweight: boolean;
   overweightMode: OverweightMode;
+  /** Vender T7 no gerente de cais quando for preciso aliviar o navio. */
+  sellT7: boolean;
 }
 
 /** Ajuste manual das informações de porto que não vêm nos dados do jogo. */

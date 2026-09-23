@@ -200,6 +200,24 @@ Decisões do usuário que simplificam o cálculo — não reintroduza campos par
   `melhorTransferencia` nunca leva o que ainda vai ser gasto nas trocas seguintes da viagem.
 - Passo novo no roteiro: `TripStep` com `kind: 'transfer'`.
 
+## Venda de T7 para aliviar o navio
+
+- `ShipSettings.sellT7` (padrão ligado; configurações antigas migram para ligado) vira
+  `RouteContext.sellT7`. Só T7 (`level_7`) e só nos gerentes de cais (`wharfIslandIds`).
+- Só vende quando é preciso, em dois momentos de `simularViagem`:
+  **antes** de uma troca cuja carga resultante passaria do peso ou dos slots (ou com o navio já
+  em sobrepeso), parando na doca que menos desvia do caminho até o porto da troca; e **depois**
+  de uma troca que deixou o navio pesado, só se o próprio porto tem gerente de cais (navio
+  pesado não navega).
+- Vende todos os T7 livres a bordo; o que ainda vai ser gasto numa troca seguinte da viagem
+  fica reservado. O vendido entra em `Trip.sold`, sai da carga e **não** volta na descarga da
+  base. Passo novo no roteiro: `TripStep` com `kind: 'sell'`.
+- A venda antecipada é tentada antes da transferência para o inventário.
+- A ordem das trocas decide se a venda resolve (o T7 precisa nascer antes do aperto): quando a
+  ordem mais curta não cabe, o solver tenta o mesmo percurso ao contrário (mesma distância).
+  Uma busca em profundidade por ordens viáveis foi testada e descartada: triplicava o tempo sem
+  melhorar a distância.
+
 ## Rota e carga
 
 - `RouteSolver` é a interface trocável: `createRouteSolver({ maxTrocasExato, reinicios,

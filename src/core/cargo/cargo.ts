@@ -113,6 +113,24 @@ export function melhorTransferencia(
   return melhor;
 }
 
+/**
+ * T7 que podem ser vendidos no gerente de cais: tudo o que está a bordo menos
+ * o que ainda vai ser gasto nas próximas trocas da viagem (`reservado`).
+ */
+export function t7Vendaveis(
+  cargo: Cargo,
+  items: ItemIndex,
+  reservado: ReadonlyMap<string, number> = new Map(),
+): ItemQty[] {
+  const vendaveis: ItemQty[] = [];
+  for (const [itemId, qtd] of cargo) {
+    if (items.tierOf(itemId) !== 'level_7') continue;
+    const livre = qtd - (reservado.get(itemId) ?? 0);
+    if (livre > 0) vendaveis.push({ itemId, qty: livre });
+  }
+  return vendaveis.sort((a, b) => a.itemId.localeCompare(b.itemId));
+}
+
 export function itensDaCarga(cargo: Cargo): ItemQty[] {
   return [...cargo]
     .filter(([, qty]) => qty > 0)

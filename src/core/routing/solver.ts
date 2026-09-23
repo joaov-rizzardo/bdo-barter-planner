@@ -1,8 +1,8 @@
 import type { Trade } from '../models/types';
 import { MAX_TROCAS_EXATO, ordenarTrocas } from './order';
-import { dependencias, ordemTopologica } from './precedence';
+import { dependencias, ordemTopologica, ordemValida } from './precedence';
 import { simularViagem } from './simulate';
-import type { RouteSolver, RouteWarning, Trip } from './types';
+import type { RouteContext, RouteSolver, RouteWarning, Trip } from './types';
 
 export interface SolverOptions {
   /** Acima deste número de trocas por viagem, usa a heurística. */
@@ -27,6 +27,19 @@ function criarRng(semente: number): () => number {
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
+}
+
+/**
+ * A ordem mais curta da viagem pode não caber no navio quando a venda de T7
+ * depende da ordem (o T7 precisa nascer antes do aperto, ou num porto com
+ * gerente de cais). O mesmo percurso ao contrário tem a mesma distância e
+ * muda o momento em que cada T7 nasce: é a alternativa que o solver tenta.
+ */
+function tentarPercursoInvertido(maisCurta: readonly Trade[], ctx: RouteContext): Trip | null {
+  const invertida = [...maisCurta].reverse();
+  if (!ordemValida(invertida, dependencias(invertida))) return null;
+  const simulada = simularViagem(invertida, ctx, 0);
+  return simulada.ok ? simulada.trip : null;
 }
 
 interface Opcao {
@@ -111,7 +124,16 @@ export function createRouteSolver(options: SolverOptions = {}): RouteSolver {
           maxExato,
         );
         const simulada = simularViagem(sequenciaDaViagem, ctx, 0);
-        const trip = simulada.ok ? simulada.trip : null;
+        let trip = simulada.ok ? simulada.trip : null;
+        // Com venda de T7, a ordem decide se a viagem cabe: tenta o sentido inverso.
+        if (
+          !trip &&
+          ctx.sellT7 &&
+          grupo.length > 1 &&
+          grupo.some((t) => ctx.items.tierOf(t.outputItemId) === 'level_7')
+        ) {
+          trip = tentarPercursoInvertido(sequenciaDaViagem, ctx);
+        }
         cache.set(chave, trip);
         return trip;
       };

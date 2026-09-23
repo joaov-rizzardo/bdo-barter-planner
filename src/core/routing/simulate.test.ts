@@ -236,3 +236,137 @@ describe('sobrepeso e transferência para o inventário', () => {
     expect(r.trip.steps.filter((s) => s.kind === 'sail')).toHaveLength(2);
   });
 });
+
+describe('venda de T7 no gerente de cais', () => {
+  // Carga leve na base (4 x i1 = 400 LT); cada troca rende 2 itens de 2000 LT.
+  const produzT7 = troca({
+    id: 't7',
+    islandId: 'A',
+    inputItemId: 'i1',
+    inputQtyPerTrade: 1,
+    outputItemId: 'i7',
+    plannedTrades: 2,
+    hasStock: true,
+  });
+  const produzT6 = troca({
+    id: 't6',
+    islandId: 'C',
+    inputItemId: 'i1',
+    inputQtyPerTrade: 1,
+    outputItemId: 'i6',
+    plannedTrades: 2,
+    hasStock: true,
+  });
+
+  it('vende antes da troca que deixaria o navio pesado, na doca do caminho', () => {
+    const r = simularViagem([produzT7, produzT6], contexto({ maxWeightLt: 5000 }, ['B'], true), 0);
+
+    expect(r.ok).toBe(true);
+    expect(r.trip.steps.map((s) => s.kind)).toEqual([
+      'load',
+      'sail',
+      'trade',
+      'sail',
+      'sell',
+      'sail',
+      'trade',
+      'sail',
+      'unload',
+    ]);
+    expect(r.trip.steps.find((s) => s.kind === 'sell')).toMatchObject({
+      islandId: 'B',
+      items: [{ itemId: 'i7', qty: 2 }],
+      weightLt: 200,
+    });
+    // A → B → C passa pela doca sem desvio nenhum
+    expect(r.trip.distance).toBe(400);
+    expect(r.trip.sold).toEqual([{ itemId: 'i7', qty: 2 }]);
+    // o T7 vendido não volta para a base; o T6 volta
+    expect(r.trip.unloadAtBase).toEqual([{ itemId: 'i6', qty: 2 }]);
+  });
+
+  it('com a venda desligada, a mesma viagem não cabe', () => {
+    const r = simularViagem([produzT7, produzT6], contexto({ maxWeightLt: 5000 }, ['B']), 0);
+
+    expect(r.ok).toBe(false);
+    expect(r.falha).toMatchObject({ tradeId: 't6', motivo: 'peso' });
+    expect(r.trip.sold).toEqual([]);
+  });
+
+  it('não vende quando o navio aguenta a carga', () => {
+    const r = simularViagem([produzT7, produzT6], contexto({}, ['B'], true), 0);
+
+    expect(r.ok).toBe(true);
+    expect(r.trip.sold).toEqual([]);
+    expect(r.trip.unloadAtBase).toEqual([
+      { itemId: 'i6', qty: 2 },
+      { itemId: 'i7', qty: 2 },
+    ]);
+  });
+
+  it('nunca vende o T7 que ainda vai ser gasto numa troca da viagem', () => {
+    const gastaT7 = troca({
+      id: 'gasta',
+      islandId: 'C',
+      inputItemId: 'i7',
+      inputQtyPerTrade: 1,
+      outputItemId: 'i6',
+      outputQtyPerTrade: 3,
+      plannedTrades: 2,
+    });
+    const r = simularViagem([produzT7, gastaT7], contexto({ maxWeightLt: 5000 }, ['B'], true), 0);
+
+    expect(r.ok).toBe(false);
+    expect(r.falha).toMatchObject({ tradeId: 'gasta', motivo: 'peso' });
+    expect(r.trip.steps.some((s) => s.kind === 'sell')).toBe(false);
+  });
+
+  it('vende na hora quando a troca deixa o navio pesado num porto com gerente de cais', () => {
+    const t = troca({
+      id: 'pesada',
+      islandId: 'B',
+      inputItemId: 'i1',
+      inputQtyPerTrade: 1,
+      outputItemId: 'i7',
+      plannedTrades: 3,
+      hasStock: true,
+    });
+    const r = simularViagem([t], contexto({ maxWeightLt: 5000 }, ['B'], true), 0);
+
+    expect(r.ok).toBe(true);
+    expect(r.trip.steps.map((s) => s.kind)).toEqual([
+      'load',
+      'sail',
+      'trade',
+      'sell',
+      'sail',
+      'unload',
+    ]);
+    expect(r.trip.sold).toEqual([{ itemId: 'i7', qty: 3 }]);
+    expect(r.trip.unloadAtBase).toEqual([]);
+  });
+
+  it('sem gerente de cais no porto, a troca que pesa demais falha', () => {
+    const t = troca({
+      id: 'pesada',
+      islandId: 'A',
+      inputItemId: 'i1',
+      inputQtyPerTrade: 1,
+      outputItemId: 'i7',
+      plannedTrades: 3,
+      hasStock: true,
+    });
+    const r = simularViagem([t], contexto({ maxWeightLt: 5000 }, ['B'], true), 0);
+
+    expect(r.ok).toBe(false);
+    expect(r.falha).toMatchObject({ tradeId: 'pesada', motivo: 'peso' });
+  });
+
+  it('a venda também libera slots', () => {
+    const r = simularViagem([produzT7, produzT6], contexto({ slots: 3 }, ['B'], true), 0);
+
+    expect(r.ok).toBe(true);
+    expect(r.trip.sold).toEqual([{ itemId: 'i7', qty: 2 }]);
+    expect(r.trip.peakSlots).toBe(3);
+  });
+});

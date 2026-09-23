@@ -36,6 +36,8 @@ export interface ViagemDoRoteiro {
   barganhaDaViagem: number;
   /** Pack de 1 slot levado no inventário do personagem. */
   inventario: ItemQty[];
+  /** T7 vendidos no gerente de cais para aliviar o navio. */
+  vendidos: ItemQty[];
   /** A viagem passa do peso livre em algum passo (sobrepeso liberado). */
   emSobrepeso: boolean;
 }
@@ -113,6 +115,8 @@ export function useRoteiro({ usarProgresso = false }: OpcoesDoRoteiro = {}): Rot
       wharfIslandIds: ilhas
         .filter((i) => i.hasWharfManager && i.x !== null && i.y !== null)
         .map((i) => i.id),
+      // T7 vendidos no gerente de cais quando for preciso aliviar o navio.
+      sellT7: ship.sellT7,
     });
   }, [trocasDoRoteiro, problemas, route, ship, items, ilhas]);
 
@@ -150,6 +154,7 @@ export function useRoteiro({ usarProgresso = false }: OpcoesDoRoteiro = {}): Rot
         passos,
         barganhaDaViagem,
         inventario: trip.inventory,
+        vendidos: trip.sold,
         emSobrepeso: trip.peakWeightLt > ship.freeWeightLt,
       };
     });

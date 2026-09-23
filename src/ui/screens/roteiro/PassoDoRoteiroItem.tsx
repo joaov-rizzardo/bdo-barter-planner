@@ -21,6 +21,8 @@ export function PassoDoRoteiroItem({ passo }: { passo: PassoDoRoteiro }) {
         return `${nomeDaIlha(step.islandId, ilhas)}: trocar ${step.times}×`;
       case 'transfer':
         return `${nomeDaIlha(step.islandId, ilhas)}: passar 1 slot para o inventário`;
+      case 'sell':
+        return `${nomeDaIlha(step.islandId, ilhas)}: vender T7 no gerente de cais`;
       case 'unload':
         return `Voltar e descarregar em ${nomeDaIlha(step.islandId, ilhas)}`;
     }
@@ -63,6 +65,15 @@ export function PassoDoRoteiroItem({ passo }: { passo: PassoDoRoteiro }) {
             <span className="text-xs text-slate-500">
               no gerente de cais; o pack viaja com o personagem
             </span>
+          </p>
+        ) : null}
+
+        {step.kind === 'sell' ? (
+          <p className="mt-1 flex flex-wrap items-center gap-2 text-slate-300">
+            {step.items.map((i) => (
+              <ItemBadge key={i.itemId} itemId={i.itemId} quantidade={i.qty} />
+            ))}
+            <span className="text-xs text-slate-500">vendidos para aliviar o navio</span>
           </p>
         ) : null}
 
