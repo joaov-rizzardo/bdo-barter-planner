@@ -254,8 +254,16 @@ describe('solver com venda de T7', () => {
     });
 
     it('prefere desequipar a navegar em sobrepeso e transferir para o inventário', () => {
-      // Carrega 30 LT e recebe um T3 de 900 LT: passa dos 800 livres só depois da troca.
-      const pesada = troca({ id: 'p', islandId: 'A', outputItemId: 'i3' });
+      // A primeira troca rende 9 T1 (900 LT) e a segunda gasta 1 deles: o sobrepeso
+      // nasce no meio da viagem, onde só a transferência (ou menos marinheiros) resolve.
+      const pesada = troca({ id: 'p', islandId: 'A', outputQtyPerTrade: 9 });
+      const seguinte = troca({
+        id: 's',
+        islandId: 'B',
+        inputItemId: 'i1',
+        inputQtyPerTrade: 1,
+        outputItemId: 'i2',
+      });
       const ctx: RouteContext = {
         ...contexto({ maxWeightLt: 800, overweight: { limitLt: 2000, mode: 'transferencia' } }, [
           'base',
@@ -263,12 +271,14 @@ describe('solver com venda de T7', () => {
         ]),
         sailorsLt: [200, 200],
       };
-      const comTodos = solver.solve([pesada], { ...ctx, sailorsLt: [] });
-      expect(comTodos.trips[0]?.inventory).toHaveLength(1); // sem marinheiros para tirar
+      const semMarinheiros = solver.solve([pesada, seguinte], { ...ctx, sailorsLt: [] });
+      expect(semMarinheiros.trips[0]?.inventory).toHaveLength(1);
 
-      const plano = solver.solve([pesada], ctx);
-      expect(plano.trips[0]?.sailorsUnequipped).toBe(1);
+      const plano = solver.solve([pesada, seguinte], ctx);
+      expect(plano.trips).toHaveLength(1);
+      expect(plano.trips[0]?.sailorsUnequipped).toBe(2);
       expect(plano.trips[0]?.inventory).toEqual([]);
+      expect(plano.trips[0]?.peakWeightLt).toBeLessThanOrEqual(1200);
     });
 
     it('a folga dos marinheiros também sobe o teto do sobrepeso', () => {

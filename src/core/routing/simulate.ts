@@ -66,6 +66,11 @@ function juntarItens(...listas: readonly ItemQty[][]): ItemQty[] {
  * uma única vez por viagem; no modo `transferencia` o sobrepeso só é aceito
  * quando essa transferência devolve o peso para dentro do limite.
  *
+ * Depois da **última** troca não há alívio: o navio volta para a base e
+ * descarrega tudo, desde que possa navegar até lá (dentro do peso, ou em
+ * sobrepeso abaixo do teto). Vale só para peso: falta de slot continua
+ * pedindo transferência.
+ *
  * Venda de T7 (quando `ctx.sellT7`): só acontece quando é preciso aliviar, em
  * dois momentos — **antes** de uma troca que deixaria o navio acima do peso ou
  * dos slots (para na doca que menos desvia do caminho até o porto da troca) e
@@ -229,6 +234,12 @@ export function simularViagem(
   else if (inicial.slots > limits.slots) falhar(null, 'slots', inicial);
 
   const stops: TripStop[] = [];
+  /** Paradas consecutivas no mesmo porto viram uma só. */
+  const registrarParada = (trade: Trade) => {
+    const ultima = stops[stops.length - 1];
+    if (ultima && ultima.islandId === trade.islandId) ultima.tradeIds.push(trade.id);
+    else stops.push({ islandId: trade.islandId, tradeIds: [trade.id] });
+  };
 
   for (const [i, trade] of trades.entries()) {
     const entrada = trade.inputQtyPerTrade * trade.plannedTrades;
@@ -272,6 +283,20 @@ export function simularViagem(
       ...estado,
     });
 
+    // Depois da última troca o navio só volta para a base e descarrega tudo:
+    // se ele pode navegar até lá assim, não há peso para aliviar. Slot não
+    // espera a descarga: sem espaço, o item nem entra no navio.
+    const voltaParaDescarregar =
+      i === trades.length - 1 &&
+      slots() <= limits.slots &&
+      (trade.islandId === baseIslandId ||
+        peso() <= limits.maxWeightLt ||
+        (limits.overweight !== undefined && peso() <= teto));
+    if (voltaParaDescarregar) {
+      registrarParada(trade);
+      continue;
+    }
+
     // Venda na hora: a troca deixou o navio pesado e o porto tem gerente de cais.
     if (peso() > limits.maxWeightLt || slots() > limits.slots) venderT7(null, reservaEm(i + 1));
 
@@ -286,9 +311,7 @@ export function simularViagem(
       falhar(trade.id, 'slots', estado);
     if (slots() > limits.slots) falhar(trade.id, 'slots', estado);
 
-    const ultima = stops[stops.length - 1];
-    if (ultima && ultima.islandId === trade.islandId) ultima.tradeIds.push(trade.id);
-    else stops.push({ islandId: trade.islandId, tradeIds: [trade.id] });
+    registrarParada(trade);
   }
 
   navegarPara(baseIslandId);

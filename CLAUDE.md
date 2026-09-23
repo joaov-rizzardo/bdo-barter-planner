@@ -199,6 +199,9 @@ Decisões do usuário que simplificam o cálculo — não reintroduza campos par
   ou sem sobrepeso — também serve para resolver falta de slot. O pack sai da carga em
   definitivo: viaja com o personagem e entra em `Trip.inventory` e no descarregamento da base.
   `melhorTransferencia` nunca leva o que ainda vai ser gasto nas trocas seguintes da viagem.
+- Depois da **última** troca da viagem não há alívio de peso: o navio volta pesado e
+  descarrega na base, desde que possa navegar (dentro do peso, ou em sobrepeso abaixo do
+  teto). Sem sobrepeso liberado, ou com falta de slot, a regra normal continua valendo.
 - Passo novo no roteiro: `TripStep` com `kind: 'transfer'`.
 
 ## Marinheiros

@@ -173,7 +173,8 @@ describe('sobrepeso e transferência para o inventário', () => {
     const ctx = contexto({ maxWeightLt: 1000, overweight: sobrepeso(4000, 'transferencia') }, [
       'base',
     ]);
-    const r = simularViagem([t('t1', 'A'), t('t2', 'B')], ctx, 0);
+    // Uma terceira troca depois: a t2 não é a última, então precisa aliviar na hora.
+    const r = simularViagem([t('t1', 'A'), t('t2', 'B'), t('t3', 'C')], ctx, 0);
 
     expect(r.ok).toBe(false);
     expect(r.falha).toMatchObject({ tradeId: 't2', motivo: 'peso' });
@@ -215,6 +216,28 @@ describe('sobrepeso e transferência para o inventário', () => {
       r.trip.steps.findIndex((x) => x.kind === 'trade' && x.tradeId === 't1'),
     );
     expect(antesDeT1.some((x) => x.kind === 'transfer')).toBe(false);
+  });
+
+  it('depois da última troca não transfere: volta pesado e descarrega na base', () => {
+    const pesada = troca({ id: 'p', islandId: 'A', outputItemId: 'i3' });
+    const ctx = contexto({ maxWeightLt: 800, overweight: sobrepeso(2000, 'transferencia') }, [
+      'base',
+      'A',
+    ]);
+    const r = simularViagem([pesada], ctx, 0);
+
+    expect(r.ok).toBe(true);
+    expect(r.trip.inventory).toEqual([]);
+    expect(r.trip.steps.map((s) => s.kind)).toEqual(['load', 'sail', 'trade', 'sail', 'unload']);
+    expect(r.trip.unloadAtBase).toEqual([{ itemId: 'i3', qty: 1 }]);
+  });
+
+  it('sem sobrepeso liberado, a última troca pesada ainda precisa de alívio', () => {
+    const pesada = troca({ id: 'p', islandId: 'A', outputItemId: 'i3' });
+    const r = simularViagem([pesada], contexto({ maxWeightLt: 800 }, ['base']), 0);
+
+    expect(r.ok).toBe(false);
+    expect(r.falha).toMatchObject({ tradeId: 'p', motivo: 'peso' });
   });
 
   it('a transferência também resolve falta de slot, sem sobrepeso nenhum', () => {
