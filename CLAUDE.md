@@ -74,7 +74,7 @@ src/
                    Configurações + planejamento/* e configuracoes/*)
 src-tauri/         shell Rust: main.rs, lib.rs, tauri.conf.json, capabilities/
 data/raw/          arquivos brutos do projeto original (fonte do conversor)
-public/icons/      210 ícones .webp dos itens
+public/icons/      215 ícones .webp dos itens
 scripts/           convert-data.mjs
 ```
 
