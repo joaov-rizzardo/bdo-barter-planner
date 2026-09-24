@@ -210,11 +210,15 @@ Decisões do usuário que simplificam o cálculo — não reintroduza campos par
   `PESO_PADRAO_MARINHEIRO_LT` = 200, editável um a um). Só o peso importa; velocidade não
   entra no cálculo.
 - O solver recebe `RouteContext.sailorsLt` e monta as viagens como se **todos** pudessem
-  ficar na base (`comFolga` soma o peso ao livre e ao teto do sobrepeso). Depois, cada viagem
+  ficar na base (`comFolga` soma o peso ao livre, mas **não** ao teto do sobrepeso: desequipar
+  só vale quando deixa o navio leve, nunca para caber no teto de 150%). Depois, cada viagem
   recebe o **menor** número de marinheiros a desequipar (mais pesados primeiro) com que cabe
   **sem** sobrepeso, transferência para o inventário ou venda de T7 — desequipar na base é o
   alívio mais barato. Se nenhuma quantidade evita esses recursos, fica a que menos depende
-  deles: `Trip.sailorsUnequipped`/`sailorsUnequippedLt`.
+  deles: `Trip.sailorsUnequipped`/`sailorsUnequippedLt`. O sobrepeso conta por **trecho
+  navegado** acima do peso (passos `sail`), não pelo pico: o pico logo depois de uma troca
+  pode não cair com os marinheiros, mas a volta pesada para a base, sim. Uma quantidade maior
+  só é escolhida se reduzir esse custo; a troca que não cabe nem sozinha não desequipa ninguém.
 - O roteiro mostra a instrução "desequipe N marinheiros" no topo da viagem, ou, quando cabe
   com todos, só um lembrete para equipar de volta — nenhum dos dois é passo do checklist.
 
@@ -233,6 +237,9 @@ Decisões do usuário que simplificam o cálculo — não reintroduza campos par
 - A venda antecipada é tentada antes da transferência para o inventário.
 - A ordem das trocas decide se a venda resolve (o T7 precisa nascer antes do aperto): quando a
   ordem mais curta não cabe, o solver tenta o mesmo percurso ao contrário (mesma distância).
+  Vale para qualquer viagem, não só com T7: o peso aperta em pontos diferentes conforme a
+  ordem. `montarViagem` ordena o grupo por id antes, para percursos empatados não variarem
+  com a ordem de entrada (o cache do solver é pelo conjunto de trocas).
   Uma busca em profundidade por ordens viáveis foi testada e descartada: triplicava o tempo sem
   melhorar a distância.
 

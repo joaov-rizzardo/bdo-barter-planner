@@ -30,10 +30,10 @@ function criarRng(semente: number): () => number {
 }
 
 /**
- * A ordem mais curta da viagem pode não caber no navio quando a venda de T7
- * depende da ordem (o T7 precisa nascer antes do aperto, ou num porto com
- * gerente de cais). O mesmo percurso ao contrário tem a mesma distância e
- * muda o momento em que cada T7 nasce: é a alternativa que o solver tenta.
+ * A ordem mais curta da viagem pode não caber no navio: o peso aperta em
+ * pontos diferentes conforme a ordem, e a venda de T7 depende de o T7 nascer
+ * antes do aperto. O mesmo percurso ao contrário tem a mesma distância: é a
+ * alternativa que o solver tenta.
  */
 function tentarPercursoInvertido(maisCurta: readonly Trade[], ctx: RouteContext): Trip | null {
   const invertida = [...maisCurta].reverse();
@@ -44,38 +44,24 @@ function tentarPercursoInvertido(maisCurta: readonly Trade[], ctx: RouteContext)
 
 /**
  * O mesmo contexto com `folgaLt` a mais de peso livre (marinheiros
- * desequipados na base). O teto de 150% sobe junto: o que sai do navio é peso
- * que já estava a bordo.
+ * desequipados na base). O teto de 150% **não** sobe: desequipar só vale
+ * quando deixa o navio leve, nunca para caber no sobrepeso.
  */
 function comFolga(ctx: RouteContext, folgaLt: number): RouteContext {
   if (folgaLt <= 0) return ctx;
-  const { overweight, ...limites } = ctx.limits;
-  return {
-    ...ctx,
-    limits: {
-      ...limites,
-      maxWeightLt: limites.maxWeightLt + folgaLt,
-      ...(overweight
-        ? { overweight: { ...overweight, limitLt: overweight.limitLt + folgaLt } }
-        : {}),
-    },
-  };
+  return { ...ctx, limits: { ...ctx.limits, maxWeightLt: ctx.limits.maxWeightLt + folgaLt } };
 }
 
 /** Ordena o grupo pela menor distância e simula; `null` quando não cabe no navio. */
 function montarViagem(grupo: readonly Trade[], ctx: RouteContext, maxExato: number): Trip | null {
-  const { ordem } = ordenarTrocas(grupo, ctx.baseIslandId, ctx.distances, maxExato);
+  // Ordem estável: o mesmo conjunto de trocas sempre dá o mesmo percurso (o
+  // cache do solver é pelo conjunto, e percursos empatados não podem variar).
+  const estavel = [...grupo].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const { ordem } = ordenarTrocas(estavel, ctx.baseIslandId, ctx.distances, maxExato);
   const simulada = simularViagem(ordem, ctx, 0);
   if (simulada.ok) return simulada.trip;
-  // Com venda de T7, a ordem decide se a viagem cabe: tenta o sentido inverso.
-  if (
-    ctx.sellT7 &&
-    grupo.length > 1 &&
-    grupo.some((t) => ctx.items.tierOf(t.outputItemId) === 'level_7')
-  ) {
-    return tentarPercursoInvertido(ordem, ctx);
-  }
-  return null;
+  // A ordem decide onde o peso aperta: tenta o sentido inverso.
+  return grupo.length > 1 ? tentarPercursoInvertido(ordem, ctx) : null;
 }
 
 interface Opcao {
@@ -378,8 +364,14 @@ export function createRouteSolver(options: SolverOptions = {}): RouteSolver {
           const ctxDaViagem = comFolga(ctxDoNavio, folgaDe(quantos));
           const viagem = montarViagem(grupo, ctxDaViagem, maxExato);
           if (!viagem) continue;
-          const sobrepeso = viagem.peakWeightLt > ctxDaViagem.limits.maxWeightLt ? 1 : 0;
-          const custo = sobrepeso * 1_000 + viagem.inventory.length + viagem.sold.length;
+          // Conta os trechos navegados acima do peso, não o pico: o pico logo
+          // depois de uma troca muitas vezes não cai com os marinheiros, mas a
+          // volta pesada para a base, sim.
+          const maxLt = ctxDaViagem.limits.maxWeightLt;
+          const trechosPesados = viagem.steps.filter(
+            (s) => s.kind === 'sail' && s.weightLt > maxLt + EPS,
+          ).length;
+          const custo = trechosPesados * 1_000 + viagem.inventory.length + viagem.sold.length;
           if (!escolhida || custo < escolhida.custo) escolhida = { viagem, quantos, custo };
           if (custo === 0) break;
         }
@@ -391,14 +383,10 @@ export function createRouteSolver(options: SolverOptions = {}): RouteSolver {
             sailorsUnequippedLt: folgaDe(escolhida.quantos),
           };
         }
-        // Só chega aqui a troca que não cabe nem sozinha.
-        const viagem = simularViagem(grupo, ctx, i).trip;
-        return {
-          ...viagem,
-          index: i,
-          sailorsUnequipped: marinheiros.length,
-          sailorsUnequippedLt: folgaDe(marinheiros.length),
-        };
+        // Só chega aqui a troca que não cabe nem sozinha: desequipar não a
+        // deixa leve, então ninguém sai do navio.
+        const viagem = simularViagem(grupo, ctxDoNavio, i).trip;
+        return { ...viagem, index: i, sailorsUnequipped: 0, sailorsUnequippedLt: 0 };
       });
 
       return {

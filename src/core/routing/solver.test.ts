@@ -281,7 +281,38 @@ describe('solver com venda de T7', () => {
       expect(plano.trips[0]?.peakWeightLt).toBeLessThanOrEqual(1200);
     });
 
-    it('a folga dos marinheiros também sobe o teto do sobrepeso', () => {
+    it('desequipa para não voltar pesado mesmo quando o pico da viagem não cai', () => {
+      // A primeira troca rende 4 T2 (1.600 LT): o pico pede transferência com ou
+      // sem marinheiros. A segunda gasta 1 T2 e rende 9 T1 (900 LT), e a volta
+      // para a base cabe no peso livre desequipando um marinheiro.
+      const p = troca({ id: 'p', islandId: 'A', outputItemId: 'i2', outputQtyPerTrade: 4 });
+      const q = troca({
+        id: 'q',
+        islandId: 'B',
+        inputItemId: 'i2',
+        inputQtyPerTrade: 1,
+        outputQtyPerTrade: 9,
+      });
+      const ctx: RouteContext = {
+        ...contexto({ maxWeightLt: 800, overweight: { limitLt: 3000, mode: 'transferencia' } }, [
+          'base',
+          'A',
+          'B',
+        ]),
+        sailorsLt: [200, 200],
+      };
+      const plano = solver.solve([p, q], ctx);
+      const viagem = plano.trips[0]!;
+
+      expect(plano.trips).toHaveLength(1);
+      expect(viagem.inventory).toHaveLength(1);
+      expect(viagem.sailorsUnequipped).toBeGreaterThan(0);
+      const volta = viagem.steps.filter((s) => s.kind === 'sail').at(-1)!;
+      expect(volta.weightLt).toBeLessThanOrEqual(800 + viagem.sailorsUnequippedLt);
+    });
+
+    it('desequipa na base quando isso deixa o navio leve', () => {
+      // 300 LT de carga com 100 livres: um marinheiro de 200 resolve.
       const ctx: RouteContext = {
         ...contexto({ maxWeightLt: 100, overweight: { limitLt: 200, mode: 'qualquer' } }),
         sailorsLt: [200],
@@ -290,6 +321,63 @@ describe('solver com venda de T7', () => {
 
       expect(plano.warnings).toEqual([]);
       expect(plano.trips[0]?.sailorsUnequipped).toBe(1);
+    });
+
+    it('não desequipa quando nem todos os marinheiros deixam o navio leve', () => {
+      // A troca deixa 1.230 LT a bordo e o navio volta pesado: 800 livres mais 300
+      // de marinheiros não bastam, então todos ficam.
+      const pesada = troca({ id: 'p', islandId: 'A', outputItemId: 'i2', outputQtyPerTrade: 3 });
+      const ctx: RouteContext = {
+        ...contexto({ maxWeightLt: 800, overweight: { limitLt: 3000, mode: 'qualquer' } }, ['A']),
+        sailorsLt: [200, 100],
+      };
+      const plano = solver.solve([pesada], ctx);
+
+      expect(plano.trips[0]?.sailorsUnequipped).toBe(0);
+    });
+
+    it('não desequipa só para caber no teto do sobrepeso', () => {
+      // 2.000 LT a bordo com teto de 1.900: um marinheiro de 200 não deixa o
+      // navio leve (limite de 1.000), então a troca não cabe em vez de desequipar.
+      const pesada = troca({ id: 'p', islandId: 'A', outputItemId: 'i6' });
+      const ctx: RouteContext = {
+        ...contexto({ maxWeightLt: 800, overweight: { limitLt: 1900, mode: 'qualquer' } }, ['A']),
+        sailorsLt: [200],
+      };
+      const plano = solver.solve([pesada], ctx);
+
+      expect(plano.warnings.map((w) => w.code)).toEqual(['troca_nao_cabe']);
+      expect(plano.trips[0]?.sailorsUnequipped).toBe(0);
+    });
+
+    it('com percursos empatados, usa o sentido que cabe no navio', () => {
+      // A e C ficam à mesma distância da base: base→A→C e base→C→A empatam. A
+      // troca pesada (2.000 LT) só cabe no teto se vier antes da leve.
+      for (const [idPesada, idLeve] of [
+        ['a', 'b'],
+        ['b', 'a'],
+      ] as const) {
+        const pesada = troca({
+          id: idPesada,
+          islandId: 'A',
+          outputItemId: 'i2',
+          outputQtyPerTrade: 5,
+        });
+        const leve = troca({ id: idLeve, islandId: 'C' });
+        const ctx: RouteContext = {
+          ...contexto({ maxWeightLt: 800, overweight: { limitLt: 2050, mode: 'transferencia' } }, [
+            'A',
+            'C',
+          ]),
+          sailorsLt: [200],
+        };
+        const plano = solver.solve([pesada, leve], ctx);
+
+        expect(plano.warnings).toEqual([]);
+        expect(plano.trips).toHaveLength(1);
+        expect(plano.trips[0]?.stops.map((s) => s.islandId)).toEqual(['A', 'C']);
+        expect(plano.trips[0]?.sailorsUnequipped).toBe(0);
+      }
     });
   });
 });
