@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { sampleGameData } from '../data/sampleData';
+import { CROW_COIN_ID } from '../data/tierRules';
 import { ItemIndex } from '../models/itemIndex';
 import type { Trade } from '../models/types';
 import { resolveChain } from './resolveChain';
@@ -188,6 +189,23 @@ describe('mercado, sobras e ordem', () => {
     expect(r.shoppingList).toEqual([{ itemId: '4052', qty: 500 }]);
     // ordem de execução: produz o T1 antes de consumir
     expect(r.trades.map((t) => t.outputItemId)).toEqual(['800001', '800015']);
+  });
+
+  it('troca por Moeda Corvo vem logo depois da troca que produz a entrada', () => {
+    const moeda = trocaT1T2({
+      id: 'moeda',
+      inputItemId: '800015',
+      outputItemId: CROW_COIN_ID,
+      outputQtyPerTrade: 60,
+      plannedTrades: 1,
+    });
+    const r = resolveChain([moeda, trocaT1T2({ hasStock: true })], itemIndex, routeIndex);
+
+    expect(r.trades.map((t) => t.id)).toEqual(['t1', 'moeda']);
+    expect(r.diagnostics.find((d) => d.code === 'produto_final')).toMatchObject({
+      itemId: CROW_COIN_ID,
+      message: 'Produto final do plano: 60× Moeda Corvo.',
+    });
   });
 
   it('avisa sobra de itens e identifica o produto final', () => {

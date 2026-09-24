@@ -47,6 +47,15 @@ export const TIER_RULES: readonly TierRule[] = [
 /** Custo base da troca de T4 por Moedas do Corvo. */
 export const CROW_COIN_BASE_COST = 21650;
 
+/** Id da Moeda Corvo nos dados do jogo (`receiveItemId` das rotas `crow_coin`). */
+export const CROW_COIN_ID = '10';
+
+/**
+ * Teto de trocas das rotas de Moeda Corvo que vêm com `maxTrades: 0` (as de
+ * sub-grupo): as rotas normais de moeda aceitam 1 troca.
+ */
+export const CROW_COIN_MAX_TRADES = 1;
+
 /** Pesos padrão por tier, em LT. */
 export const DEFAULT_TIER_WEIGHTS: Readonly<Record<Tier, number>> = {
   level_0: 0,

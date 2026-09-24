@@ -228,12 +228,18 @@ export function resolveChain(
   }
   leftovers.sort((a, c) => itemIndex.nameOf(a.itemId).localeCompare(itemIndex.nameOf(c.itemId)));
 
-  atuais.sort(
-    (a, c) =>
-      tierRank(itemIndex.tierOf(a.outputItemId)) - tierRank(itemIndex.tierOf(c.outputItemId)),
-  );
+  atuais.sort((a, c) => rankDaTroca(a, itemIndex) - rankDaTroca(c, itemIndex));
 
   return { trades: atuais, diagnostics, faltas, shoppingList, fromStock, leftovers };
+}
+
+/**
+ * Posição da troca na ordem de execução: o tier da saída, ou, quando a saída
+ * não tem tier (Moeda Corvo), logo depois do tier da entrada.
+ */
+function rankDaTroca(trade: Trade, itemIndex: ItemIndex): number {
+  const saida = itemIndex.tierOf(trade.outputItemId);
+  return saida ? tierRank(saida) : tierRank(itemIndex.tierOf(trade.inputItemId)) + 0.5;
 }
 
 /** Rotas que produzem o item, ordenadas pelas mais convenientes primeiro. */

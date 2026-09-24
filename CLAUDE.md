@@ -74,7 +74,7 @@ src/
                    Configurações + planejamento/* e configuracoes/*)
 src-tauri/         shell Rust: main.rs, lib.rs, tauri.conf.json, capabilities/
 data/raw/          arquivos brutos do projeto original (fonte do conversor)
-public/icons/      209 ícones .webp dos itens
+public/icons/      210 ícones .webp dos itens
 scripts/           convert-data.mjs
 ```
 
@@ -103,8 +103,9 @@ implausível — `maxTrocasEfetivo` e `custoBaseEfetivo` corrigem rotas de sub-g
 Coordenadas que faltam nos brutos vêm de `COORDENADAS_EXTRAS` (Ninho do Corvo, tirada do
 BDOCodex). Porto sem posição no mapa tem `x`/`y` nulos e fica fora do cálculo de rota.
 Para tirar coordenadas de nodes do BDOCodex, ver `docs/bdocodex-coordenadas.md`.
-Alguns `receiveItemId` (Moeda do Corvo = `10`, materiais de recompensa) não estão no catálogo:
-`ItemIndex.nameOf` devolve `Item <id>` nesses casos.
+Materiais de recompensa (`receiveItemId` das rotas `outro`) não estão no catálogo:
+`ItemIndex.nameOf` devolve `Item <id>` nesses casos. A Moeda Corvo (`CROW_COIN_ID` = `10`) entra
+no `ItemIndex` à mão (nome do BDOCodex, ícone `public/icons/crow_coin.webp`, `tier: null`).
 `hasWarehouse`/`hasWharfManager` **não** existem nos dados brutos: a lista inicial
 (`PORTOS_COM_ARMAZEM` e `PORTOS_COM_GERENTE_DE_CAIS` em `scripts/convert-data.mjs`) é um palpite
 editável nas Configurações.
@@ -187,6 +188,19 @@ Decisões do usuário que simplificam o cálculo — não reintroduza campos par
 - O modal de limite de barganha abre no clique de **Calcular rota** (antes de ir para o
   Roteiro) e informa excedente, passo em que a barganha acaba e refreshes necessários.
 - Déficit de item T0 aparece como "comprar" (vem do mercado), não como erro.
+
+## Moeda Corvo
+
+- O formulário oferece as rotas `tier` e as `crow_coin` (T1–T4 → Moeda Corvo). No seletor, a
+  moeda aparece na aba "Moedas" e com o rótulo "Moeda" no lugar do tier.
+- A moeda vai **direto para o personagem** (`ItemInfo.offShip`, `ItemIndex.isOffShip`): na
+  simulação a saída não entra na carga, então a troca só tira peso e slot do navio, e a moeda
+  não aparece na descarga da base.
+- Rotas de moeda de sub-grupo vêm com `maxTrades: 0` e barganha implausível: a reserva é
+  `CROW_COIN_MAX_TRADES` (1) e `CROW_COIN_BASE_COST` (21.650).
+- Faixas largas de recebimento (ex.: 175–325) usam campo numérico em "Recebe por troca" em vez
+  de lista.
+- Na ordem de execução da cadeia, a troca por moeda fica logo depois do tier da entrada.
 
 ## Sobrepeso e inventário do personagem
 

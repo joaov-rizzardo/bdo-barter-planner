@@ -1,3 +1,4 @@
+import { CROW_COIN_ID } from '../data/tierRules';
 import type { BarterItem, GameData, MarketMaterial, Tier } from './types';
 
 export interface ItemInfo {
@@ -5,18 +6,35 @@ export interface ItemInfo {
   /** Nome em inglês, como vem do jogo (útil para busca). */
   name: string;
   namePt: string;
-  tier: Tier;
+  /** `null` para moedas: não são item de permuta nem bem do mercado. */
+  tier: Tier | null;
   weightLt: number;
   stacks: boolean;
   isMarketMaterial: boolean;
+  /** Vai direto para o personagem ao ser recebido (Moeda Corvo): não entra no navio. */
+  offShip: boolean;
   icon: string | null;
 }
+
+/** Moeda Corvo: não está nos dados brutos, entra no catálogo à mão. */
+const MOEDA_CORVO: ItemInfo = {
+  id: CROW_COIN_ID,
+  name: 'Crow Coin',
+  namePt: 'Moeda Corvo',
+  tier: null,
+  weightLt: 0,
+  stacks: true,
+  isMarketMaterial: false,
+  offShip: true,
+  icon: 'icons/crow_coin.webp',
+};
 
 /** Índice de consulta rápida por item, montado a partir dos dados validados. */
 export class ItemIndex {
   private readonly porId = new Map<string, ItemInfo>();
 
   constructor(barterItems: readonly BarterItem[], marketMaterials: readonly MarketMaterial[]) {
+    this.porId.set(MOEDA_CORVO.id, MOEDA_CORVO);
     for (const m of marketMaterials) {
       this.porId.set(m.id, {
         id: m.id,
@@ -26,6 +44,7 @@ export class ItemIndex {
         weightLt: m.weightLt,
         stacks: true,
         isMarketMaterial: true,
+        offShip: false,
         icon: m.icon,
       });
     }
@@ -38,6 +57,7 @@ export class ItemIndex {
         weightLt: i.weightLt,
         stacks: i.stacks,
         isMarketMaterial: false,
+        offShip: false,
         icon: i.icon,
       });
     }
@@ -58,7 +78,7 @@ export class ItemIndex {
 
   /** Tier do item; `undefined` quando o item não está no catálogo. */
   tierOf(id: string): Tier | undefined {
-    return this.porId.get(id)?.tier;
+    return this.porId.get(id)?.tier ?? undefined;
   }
 
   weightOf(id: string): number {
@@ -71,6 +91,11 @@ export class ItemIndex {
 
   isMarketMaterial(id: string): boolean {
     return this.porId.get(id)?.isMarketMaterial ?? false;
+  }
+
+  /** Item que vai direto para o personagem (Moeda Corvo): nem peso nem slot no navio. */
+  isOffShip(id: string): boolean {
+    return this.porId.get(id)?.offShip ?? false;
   }
 }
 

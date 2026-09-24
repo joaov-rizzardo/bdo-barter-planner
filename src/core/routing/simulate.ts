@@ -10,6 +10,7 @@ import {
   type Cargo,
   type ItemQty,
 } from '../cargo/cargo';
+import type { ItemIndex } from '../models/itemIndex';
 import type { Trade } from '../models/types';
 import type { RouteContext, Trip, TripStep, TripStop } from './types';
 
@@ -26,8 +27,17 @@ export interface SimulacaoResultado {
   falha: FalhaDeCarga | null;
 }
 
+/**
+ * Carga depois de receber a saída da troca. Moeda Corvo vai direto para o
+ * personagem: não entra no navio, então a troca só alivia a carga.
+ */
+function receber(cargo: Cargo, trade: Trade, qty: number, items: ItemIndex): Map<string, number> {
+  if (items.isOffShip(trade.outputItemId)) return new Map(cargo);
+  return adicionar(cargo, trade.outputItemId, qty);
+}
+
 /** O que precisa entrar no navio na base para a viagem funcionar. */
-function calcularCarregamento(trades: readonly Trade[]): Map<string, number> {
+function calcularCarregamento(trades: readonly Trade[], items: ItemIndex): Map<string, number> {
   let cargo = new Map<string, number>();
   const preload = new Map<string, number>();
 
@@ -40,7 +50,7 @@ function calcularCarregamento(trades: readonly Trade[]): Map<string, number> {
       cargo.set(trade.inputItemId, disponivel + falta);
     }
     cargo = remover(cargo, trade.inputItemId, precisa) ?? cargo;
-    cargo = adicionar(cargo, trade.outputItemId, trade.outputQtyPerTrade * trade.plannedTrades);
+    cargo = receber(cargo, trade, trade.outputQtyPerTrade * trade.plannedTrades, items);
   }
   return preload;
 }
@@ -89,7 +99,7 @@ export function simularViagem(
   const gerentes = ctx.wharfIslandIds ?? [];
 
   const steps: TripStep[] = [];
-  let cargo: Cargo = calcularCarregamento(trades);
+  let cargo: Cargo = calcularCarregamento(trades, items);
   let falha: FalhaDeCarga | null = null;
   let picoPeso = 0;
   let picoSlots = 0;
@@ -247,10 +257,11 @@ export function simularViagem(
 
     // Venda antecipada: se a troca vai deixar o navio pesado (ou ele já está
     // em sobrepeso), vende os T7 livres no caminho até o porto da troca.
-    const depois = adicionar(
+    const depois = receber(
       remover(cargo, trade.inputItemId, entrada) ?? cargo,
-      trade.outputItemId,
+      trade,
       saida,
+      items,
     );
     if (
       emSobrepeso ||
@@ -270,7 +281,7 @@ export function simularViagem(
     navegarPara(trade.islandId);
 
     cargo = remover(cargo, trade.inputItemId, entrada) ?? cargo;
-    cargo = adicionar(cargo, trade.outputItemId, saida);
+    cargo = receber(cargo, trade, saida, items);
 
     const estado = medir();
     steps.push({

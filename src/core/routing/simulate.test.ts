@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { CROW_COIN_ID } from '../data/tierRules';
 import { cadeiaEmCadeia, contexto, troca } from './fixtures';
 import { simularViagem } from './simulate';
 
@@ -82,6 +83,58 @@ describe('simulação da viagem', () => {
     const r = simularViagem([t], contexto(), 0);
     expect(r.trip.distance).toBe(0);
     expect(r.trip.steps.map((s) => s.kind)).toEqual(['load', 'trade', 'unload']);
+  });
+});
+
+describe('troca por Moeda Corvo', () => {
+  it('a moeda vai para o personagem: não pesa, não ocupa slot e não volta na descarga', () => {
+    const t = troca({
+      id: 'moeda',
+      islandId: 'A',
+      inputItemId: 'i3',
+      inputQtyPerTrade: 1,
+      outputItemId: CROW_COIN_ID,
+      outputQtyPerTrade: 60,
+      plannedTrades: 2,
+      hasStock: true,
+    });
+    const r = simularViagem([t], contexto(), 0);
+
+    expect(r.ok).toBe(true);
+    expect(r.trip.loadAtBase).toEqual([{ itemId: 'i3', qty: 2 }]);
+    const passo = r.trip.steps.find((s) => s.kind === 'trade');
+    expect(passo).toMatchObject({ output: { itemId: CROW_COIN_ID, qty: 120 }, weightLt: 0 });
+    expect(passo?.slots).toBe(0);
+    expect(r.trip.unloadAtBase).toEqual([]);
+  });
+
+  it('alivia o navio e abre espaço para as trocas seguintes da viagem', () => {
+    const trades = [
+      troca({
+        id: 'moeda',
+        islandId: 'A',
+        inputItemId: 'i3',
+        inputQtyPerTrade: 1,
+        outputItemId: CROW_COIN_ID,
+        outputQtyPerTrade: 60,
+        hasStock: true,
+      }),
+      troca({
+        id: 'sobe',
+        islandId: 'B',
+        inputItemId: 'i1',
+        inputQtyPerTrade: 1,
+        outputItemId: 'i2',
+        hasStock: true,
+      }),
+    ];
+    const r = simularViagem(trades, contexto({ maxWeightLt: 1000, slots: 2 }), 0);
+
+    expect(r.ok).toBe(true);
+    // i3 + i1 (1000) → só i1 (100) → i2 (400) → descarrega
+    const pesos = r.trip.steps.filter((s) => s.kind !== 'sail').map((s) => s.weightLt);
+    expect(pesos).toEqual([1000, 100, 400, 0]);
+    expect(r.trip.unloadAtBase).toEqual([{ itemId: 'i2', qty: 1 }]);
   });
 });
 

@@ -1,3 +1,4 @@
+import type { ItemInfo } from '../core/models/itemIndex';
 import type { Tier } from '../core/models/types';
 
 const ROTULOS: Record<Tier, string> = {
@@ -13,6 +14,9 @@ const ROTULOS: Record<Tier, string> = {
 };
 
 export const rotuloTier = (tier: Tier | undefined) => (tier ? ROTULOS[tier] : '—');
+
+/** Rótulo curto do item: o tier, ou "Moeda" para a Moeda Corvo (sem tier). */
+export const rotuloDoItem = (info: ItemInfo) => (info.tier ? ROTULOS[info.tier] : 'Moeda');
 
 /** Ordem de exibição dos grupos de tier nos seletores. */
 export const TIERS_EM_ORDEM: Tier[] = [

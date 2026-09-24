@@ -1,5 +1,5 @@
 import { useDataStore } from '../../store/dataStore';
-import { rotuloTier } from '../tiers';
+import { rotuloDoItem } from '../tiers';
 
 /** Ícone + nome do item, com o tier ao lado. */
 export function ItemBadge({ itemId, quantidade }: { itemId: string; quantidade?: number }) {
@@ -16,7 +16,7 @@ export function ItemBadge({ itemId, quantidade }: { itemId: string; quantidade?:
       <span>
         {quantidade === undefined ? '' : `${quantidade}× `}
         {items.nameOf(itemId)}
-        {info ? <span className="ml-1 text-xs text-slate-500">{rotuloTier(info.tier)}</span> : null}
+        {info ? <span className="ml-1 text-xs text-slate-500">{rotuloDoItem(info)}</span> : null}
       </span>
     </span>
   );

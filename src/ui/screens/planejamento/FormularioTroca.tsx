@@ -13,6 +13,12 @@ const faixaDeSaida = (r: BarterRoute) =>
   r.receiveQtyMax > r.receiveQtyMin
     ? `${r.receiveQtyMin}–${r.receiveQtyMax}`
     : `${r.receiveQtyMin}`;
+
+/** Rotas que o formulário oferece: subida de tier e troca por Moeda Corvo. */
+const rotaDoFormulario = (r: BarterRoute) => r.kind === 'tier' || r.kind === 'crow_coin';
+
+/** Acima disso a quantidade recebida vira campo numérico em vez de lista. */
+const MAX_OPCOES_NA_LISTA = 10;
 import { nomeDaIlha } from '../../describe';
 
 export function FormularioTroca() {
@@ -28,9 +34,9 @@ export function FormularioTroca() {
   const [plannedTrades, setPlannedTrades] = useState(10);
   const [hasStock, setHasStock] = useState(false);
 
-  /** Itens que alguma rota de subida de tier aceita como entrada. */
+  /** Itens que alguma rota de subida de tier ou de Moeda Corvo aceita como entrada. */
   const entradasPossiveis = useMemo(
-    () => [...new Set(data.routes.filter((r) => r.kind === 'tier').map((r) => r.giveItemId))],
+    () => [...new Set(data.routes.filter(rotaDoFormulario).map((r) => r.giveItemId))],
     [data.routes],
   );
 
@@ -40,7 +46,7 @@ export function FormularioTroca() {
       ...new Set(
         routes
           .consumindo(inputItemId)
-          .filter((r) => r.kind === 'tier')
+          .filter(rotaDoFormulario)
           .map((r) => r.receiveItemId),
       ),
     ];
@@ -159,16 +165,34 @@ export function FormularioTroca() {
           hint={`Esta rota entrega de ${rota.receiveQtyMin} a ${rota.receiveQtyMax} por troca.`}
           htmlFor="saida-por-troca"
         >
-          <Select
-            id="saida-por-troca"
-            value={qtdRecebida}
-            options={opcoesDeSaida.map((q) => ({
-              value: q,
-              label: `${fmtInteiro(rota.giveQty)}:${fmtInteiro(q)} — ${fmtInteiro(q)}× por troca`,
-            }))}
-            onChange={(v) => setOutputQty(Number(v))}
-          />
+          {opcoesDeSaida.length > MAX_OPCOES_NA_LISTA ? (
+            <NumberInput
+              id="saida-por-troca"
+              value={qtdRecebida}
+              min={rota.receiveQtyMin}
+              max={rota.receiveQtyMax}
+              onChange={setOutputQty}
+              suffix="por troca"
+            />
+          ) : (
+            <Select
+              id="saida-por-troca"
+              value={qtdRecebida}
+              options={opcoesDeSaida.map((q) => ({
+                value: q,
+                label: `${fmtInteiro(rota.giveQty)}:${fmtInteiro(q)} — ${fmtInteiro(q)}× por troca`,
+              }))}
+              onChange={(v) => setOutputQty(Number(v))}
+            />
+          )}
         </Field>
+      ) : null}
+
+      {rota && items.isOffShip(rota.receiveItemId) ? (
+        <p className="text-sm text-slate-400">
+          {items.nameOf(rota.receiveItemId)} vai direto para o personagem: não pesa nem ocupa slot
+          no navio, então a troca só alivia a carga.
+        </p>
       ) : null}
 
       <Field

@@ -3,10 +3,15 @@ import type { ItemInfo } from '../../core/models/itemIndex';
 import type { Tier } from '../../core/models/types';
 import { useDataStore } from '../../store/dataStore';
 import { semAcento } from '../format';
-import { rotuloTier, TIERS_EM_ORDEM } from '../tiers';
+import { rotuloDoItem, rotuloTier, TIERS_EM_ORDEM } from '../tiers';
 import { Modal } from './Modal';
 
-const TODOS = 'todos';
+const TODOS = 'todos' as const;
+/** Aba dos itens sem tier (Moeda Corvo). */
+const MOEDAS = 'moedas' as const;
+type Aba = Tier | typeof TODOS | typeof MOEDAS;
+
+const abaDoItem = (info: ItemInfo): Aba => info.tier ?? MOEDAS;
 
 /**
  * Escolha de item em modal: abas por tier, busca por nome (pt ou inglês,
@@ -57,7 +62,7 @@ export function SeletorDeItem({
           <>
             <Icone info={selecionado} />
             <span className="min-w-0 flex-1 truncate">{selecionado.namePt}</span>
-            <span className="shrink-0 text-xs text-slate-500">{rotuloTier(selecionado.tier)}</span>
+            <span className="shrink-0 text-xs text-slate-500">{rotuloDoItem(selecionado)}</span>
           </>
         ) : (
           <span className="flex-1 text-slate-500">
@@ -99,7 +104,7 @@ function ModalDeItens({
   onEscolher: (itemId: string) => void;
 }) {
   const [busca, setBusca] = useState('');
-  const [tier, setTier] = useState<Tier | typeof TODOS>(TODOS);
+  const [tier, setTier] = useState<Aba>(TODOS);
   const campoBusca = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -114,20 +119,22 @@ function ModalDeItens({
   const visiveis = useMemo(() => {
     const termo = semAcento(busca.trim());
     return infos.filter((i) => {
-      if (tier !== TODOS && i.tier !== tier) return false;
+      if (tier !== TODOS && abaDoItem(i) !== tier) return false;
       if (!termo) return true;
       // o nome em inglês não aparece na lista, mas continua valendo na busca
       return semAcento(`${i.namePt} ${i.name}`).includes(termo);
     });
   }, [infos, busca, tier]);
 
-  const abas: { id: Tier | typeof TODOS; label: string; total: number }[] = [
+  const totalDeMoedas = infos.filter((i) => abaDoItem(i) === MOEDAS).length;
+  const abas: { id: Aba; label: string; total: number }[] = [
     { id: TODOS, label: 'Todos', total: infos.length },
     ...tiersPresentes.map((t) => ({
       id: t,
       label: rotuloTier(t),
       total: infos.filter((i) => i.tier === t).length,
     })),
+    ...(totalDeMoedas > 0 ? [{ id: MOEDAS, label: 'Moedas', total: totalDeMoedas }] : []),
   ];
 
   return (
@@ -181,7 +188,7 @@ function ModalDeItens({
                 >
                   <Icone info={info} />
                   <span className="min-w-0 flex-1 truncate">{info.namePt}</span>
-                  <span className="shrink-0 text-xs text-slate-500">{rotuloTier(info.tier)}</span>
+                  <span className="shrink-0 text-xs text-slate-500">{rotuloDoItem(info)}</span>
                 </button>
               </li>
             ))}

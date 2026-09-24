@@ -1,4 +1,4 @@
-import { TIER_RULES } from '../data/tierRules';
+import { CROW_COIN_BASE_COST, CROW_COIN_MAX_TRADES, TIER_RULES } from '../data/tierRules';
 import type { BarterRoute, Tier } from '../models/types';
 
 /** Barganha base mínima plausível: valores menores vêm de rotas com dados incompletos. */
@@ -10,6 +10,7 @@ const BARGANHA_MINIMA_PLAUSIVEL = 1000;
  */
 export function maxTrocasEfetivo(route: BarterRoute): number {
   if (route.maxTrades > 0) return route.maxTrades;
+  if (route.kind === 'crow_coin') return CROW_COIN_MAX_TRADES;
   const regra = TIER_RULES.find((r) => r.from === route.giveTier && r.to === route.receiveTier);
   return regra?.maxTrades ?? 10;
 }
@@ -17,6 +18,7 @@ export function maxTrocasEfetivo(route: BarterRoute): number {
 /** Custo base de barganha da rota, com a tabela de tiers como reserva. */
 export function custoBaseEfetivo(route: BarterRoute): number {
   if (route.parleyRequired >= BARGANHA_MINIMA_PLAUSIVEL) return route.parleyRequired;
+  if (route.kind === 'crow_coin') return CROW_COIN_BASE_COST;
   const regra = TIER_RULES.find((r) => r.from === route.giveTier && r.to === route.receiveTier);
   return regra?.baseBarterCost ?? 14286;
 }
