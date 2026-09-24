@@ -11,7 +11,7 @@ const cadeiaManual = (itemId: string, qtd: number) =>
 
 describe('dados reais do jogo', () => {
   it('passam pela validação e integridade referencial', () => {
-    expect(data.islands.length).toBe(91);
+    expect(data.islands.length).toBe(96);
     expect(data.barterItems.length).toBe(123);
     expect(data.marketMaterials.length).toBe(91);
     expect(data.routes.length).toBeGreaterThan(4000);

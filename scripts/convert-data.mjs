@@ -36,6 +36,42 @@ const PORTOS_COM_ARMAZEM = new Set([
   '1257',
 ]);
 
+/** Gerente de Cais: os portos acima, mais os que só têm o gerente sem armazém conhecido. */
+const PORTOS_COM_GERENTE_DE_CAIS = new Set([...PORTOS_COM_ARMAZEM, '562', '983']);
+
+/**
+ * Coordenadas que faltam nos dados brutos, tiradas do BDOCodex
+ * (ver docs/bdocodex-coordenadas.md). Chave: id do porto em barterPorts.json.
+ */
+const COORDENADAS_EXTRAS = {
+  983: [252800, -710000], // Ninho do Corvo (node 1746)
+};
+
+/**
+ * Portos com Gerente de Cais que não têm permutador (não estão em barterPorts.json).
+ * Só servem de parada para transferência ao inventário e venda de T7.
+ * Id `node-<id do node no BDOCodex>`; coordenadas convertidas do BDOCodex.
+ */
+const PORTOS_SO_COM_GERENTE = [
+  { node: 604, name: 'Port Epheria', namePt: 'Porto de Epheria', x: -355616, y: -32649.6 },
+  {
+    node: 1719,
+    name: 'Outpost Supply Station',
+    namePt: 'Posto de Abastecimento do Posto Avançado',
+    x: -448719.5,
+    y: -27276.8,
+  },
+  {
+    node: 1377,
+    name: 'Abandoned Pier of Shakatu',
+    namePt: 'Píer Abandonado de Shakatu',
+    x: 505184,
+    y: -264052,
+  },
+  { node: 1326, name: 'Hopeful Raft', namePt: 'Balsa Esperançosa', x: 539135, y: -299499 },
+  { node: 2052, name: 'Olvia Academy', namePt: 'Academia de Olvia', x: -120541, y: -151535 },
+];
+
 const TIERS_QUE_EMPILHAM = new Set(['level_0', 'level_1', 'level_2', 'level_3', 'level_4']);
 
 function slugIcon(icon) {
@@ -45,21 +81,38 @@ function slugIcon(icon) {
 
 function converterIlhas() {
   const ports = raw('barterPorts.json');
-  const ilhas = Object.entries(ports)
-    .map(([id, p]) => ({
+  const permutadores = Object.entries(ports).map(([id, p]) => {
+    const [x, y] = Array.isArray(p.coordinates) ? p.coordinates : (COORDENADAS_EXTRAS[id] ?? []);
+    return {
       id,
       name: p.name,
       namePt: p.name_pt ?? p.name,
-      x: Array.isArray(p.coordinates) ? p.coordinates[0] : null,
-      y: Array.isArray(p.coordinates) ? p.coordinates[1] : null,
+      x: x ?? null,
+      y: y ?? null,
       barterer: p.barterer ?? null,
       npcId: p.npcId ?? null,
       sourceTier: p.source_tier ?? null,
       targetTier: p.target_tier ?? null,
       hasWarehouse: PORTOS_COM_ARMAZEM.has(id),
-      hasWharfManager: PORTOS_COM_ARMAZEM.has(id),
-    }))
-    .sort((a, b) => a.namePt.localeCompare(b.namePt, 'pt-BR'));
+      hasWharfManager: PORTOS_COM_GERENTE_DE_CAIS.has(id),
+    };
+  });
+  const soGerente = PORTOS_SO_COM_GERENTE.map(({ node, name, namePt, x, y }) => ({
+    id: `node-${node}`,
+    name,
+    namePt,
+    x,
+    y,
+    barterer: null,
+    npcId: null,
+    sourceTier: null,
+    targetTier: null,
+    hasWarehouse: false,
+    hasWharfManager: true,
+  }));
+  const ilhas = [...permutadores, ...soGerente].sort((a, b) =>
+    a.namePt.localeCompare(b.namePt, 'pt-BR'),
+  );
   out('islands.json', ilhas);
   return ilhas.length;
 }

@@ -85,9 +85,10 @@ estado do Zustand e chama funções puras do core; o Tauri só aparece na camada
 
 `npm run data:convert` transforma os arquivos brutos em três coleções:
 
-- `src/data/islands.json` — 90 portos com permutador (`Crow's Nest` fica fora por não ter
-  coordenadas). Campos: `id`, `name`, `namePt`, `x`, `y`, `barterer`, `npcId`, `sourceTier`,
-  `targetTier`, `hasWarehouse`, `hasWharfManager`.
+- `src/data/islands.json` — 96 portos: 91 com permutador e 5 só com Gerente de Cais
+  (`PORTOS_SO_COM_GERENTE`, id `node-<id do BDOCodex>`, `barterer: null`), que servem só de
+  parada para transferência ao inventário e venda de T7. Campos: `id`, `name`, `namePt`, `x`,
+  `y`, `barterer`, `npcId`, `sourceTier`, `targetTier`, `hasWarehouse`, `hasWharfManager`.
 - `src/data/barterItems.json` — 123 itens T1–T7 + Oceano, com `tier`, `weightLt`, `stacks`.
 - `src/data/marketMaterials.json` — 91 bens terrestres (T0) com `weightLt` por unidade.
 - `src/data/barterRoutes.json` — 4356 rotas reais: porto, item dado/recebido, proporção,
@@ -99,11 +100,14 @@ Os tiers usam as strings do jogo: `level_0` … `level_7` e `great_ocean`.
 `TIER_RULES` (em `core/data/tierRules.ts`) virou reserva: só entra quando a rota traz dado
 implausível — `maxTrocasEfetivo` e `custoBaseEfetivo` corrigem rotas de sub-grupo com
 `exchangeMaxCount: 0` ou `parleyRequired: 68` (caso das T6→T7 nos dados brutos).
-Portos sem posição no mapa (Ninho do Corvo) têm `x`/`y` nulos e ficam fora do cálculo de rota.
+Coordenadas que faltam nos brutos vêm de `COORDENADAS_EXTRAS` (Ninho do Corvo, tirada do
+BDOCodex). Porto sem posição no mapa tem `x`/`y` nulos e fica fora do cálculo de rota.
+Para tirar coordenadas de nodes do BDOCodex, ver `docs/bdocodex-coordenadas.md`.
 Alguns `receiveItemId` (Moeda do Corvo = `10`, materiais de recompensa) não estão no catálogo:
 `ItemIndex.nameOf` devolve `Item <id>` nesses casos.
 `hasWarehouse`/`hasWharfManager` **não** existem nos dados brutos: a lista inicial
-(`PORTOS_COM_ARMAZEM` em `scripts/convert-data.mjs`) é um palpite editável nas Configurações.
+(`PORTOS_COM_ARMAZEM` e `PORTOS_COM_GERENTE_DE_CAIS` em `scripts/convert-data.mjs`) é um palpite
+editável nas Configurações.
 
 ## Regras de cadeia e estoque
 
@@ -150,7 +154,8 @@ Decisões do usuário que simplificam o cálculo — não reintroduza campos par
 
 ## Pendências de dados
 
-- `hasWarehouse`/`hasWharfManager` são um palpite inicial (ver `PORTOS_COM_ARMAZEM`).
+- `hasWarehouse`/`hasWharfManager` são um palpite inicial (ver `PORTOS_COM_ARMAZEM` e
+  `PORTOS_COM_GERENTE_DE_CAIS`).
 
 ## Estado e persistência
 

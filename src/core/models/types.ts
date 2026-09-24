@@ -20,7 +20,7 @@ export interface Island {
   id: string;
   name: string;
   namePt: string;
-  /** `null` em portos sem posição no mapa (ex.: Ninho do Corvo); a rota os ignora. */
+  /** `null` em portos sem posição no mapa; a rota os ignora. */
   x: number | null;
   y: number | null;
   barterer: string | null;
