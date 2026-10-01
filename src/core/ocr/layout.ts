@@ -46,7 +46,7 @@ const ILHA_MAX = 1.2;
 const SAIDA_MIN = 4.6; // nome do item recebido: a partir de 4,6h à direita
 const ICONE_ENTRADA = { x0: -0.82, x1: -0.2 };
 const ICONE_SAIDA = { x0: 4.15, x1: 4.85 };
-const ICONE_Y = { y0: 0, y1: 0.25 };
+const ICONE_Y = { y0: -0.1, y1: 0.3 };
 /** Altura do número no canto do ícone. */
 const ALTURA_DIGITO = 0.135;
 /** Altura de uma linha da lista em relação à altura do texto, quando só há uma linha. */
@@ -114,7 +114,11 @@ export function extrairLinhasDePermuta(linhas: readonly LinhaOcr[]): LinhaDePerm
     alturaDoTexto * 1.5,
   );
   const passos = ys.slice(1).map((y, i) => y - ys[i]!);
-  const h = passos.length > 0 ? Math.min(...passos) : alturaDoTexto * LINHA_POR_TEXTO;
+  // Mediana dos passos entre linhas vizinhas; passos de quase o dobro (uma
+  // linha que o OCR perdeu no meio) ficam de fora.
+  const menorPasso = Math.min(...passos);
+  const vizinhos = passos.filter((p) => p < menorPasso * 1.5);
+  const h = passos.length > 0 ? mediana(vizinhos) : alturaDoTexto * LINHA_POR_TEXTO;
 
   // Colunas: a posição de "Barganha:" sai direto ou pela de "Restante:".
   const bx =

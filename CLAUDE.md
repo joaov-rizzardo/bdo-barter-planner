@@ -301,14 +301,22 @@ Decisões do usuário que simplificam o cálculo — não reintroduza campos par
 ## Leitor de prints (OCR) — em teste, ainda fora da tela
 
 Lê a janela "Informações de Permuta" e devolve as trocas (porto, itens, recebe por troca,
-restante). Por enquanto só existe o script (`npm run ocr:ler`); a ideia é levar para a tela
-depois, reaproveitando `src/core/ocr/` (o que depende do Node fica em `scripts/ocr/comum.ts`).
+restante). Por enquanto só existe o script (`npm run ocr:ler`); a tela está sendo feita pelo
+plano em `docs/plano-importacao-prints.md` (etapa 1 concluída).
 
-- **Texto**: tesseract.js (`por`, PSM sparse) na print inteira, ampliada para ~2400 px, com o
-  maior canal de cor invertido (texto colorido sobre fundo escuro vira texto escuro).
+- **Pipeline** (`pipeline.ts`): `lerTrocasDaPrint(imagem, lerTexto, dados, modelos)` faz tudo
+  sobre `ImagemCrua` (RGB do sharp ou RGBA do `ImageData`). O OCR do texto é uma porta
+  (`LerTexto`): o Node passa o tesseract.js de `scripts/ocr/comum.ts`, a tela vai passar o do
+  navegador. O core não depende de sharp, canvas nem tesseract.
+- **Texto**: tesseract.js (`por`, PSM sparse) na print inteira. `prepararParaOcr`
+  (`imagem.ts`): maior canal de cor invertido, ampliação **bilinear** até ~2400 px e contraste
+  esticado (1% de corte). Medido no gabarito: empata com o lanczos do sharp; o bicúbico faz o
+  tesseract perder o texto vermelho.
 - **Layout** (`layout.ts`): cada troca é ancorada em "Restante:" e/ou "Barganha:" (basta uma; o
-  laranja às vezes sai "parganna!"). Tudo é medido em múltiplos da altura da linha (`h`), por
-  isso vale para qualquer resolução. Linha cortada na borda (sem nenhuma âncora) fica de fora.
+  laranja às vezes sai "parganna!"). Tudo é medido em múltiplos da altura da linha (`h`, a
+  mediana dos passos entre linhas vizinhas — o menor passo errava por 2–3 px e tirava o recorte
+  do dígito do lugar), por isso vale para qualquer resolução. Linha cortada na borda (sem
+  nenhuma âncora) fica de fora.
 - **Quantidade do ícone** (`digitos.ts`): o tesseract erra muito nesses dígitos pequenos, então
   há um classificador próprio: isola os pixels brancos (histerese: núcleo > 175, borda > 110),
   descarta moldura/arte pelo tamanho esperado do dígito (0,135 h) e compara cada glifo (grade
@@ -319,6 +327,14 @@ depois, reaproveitando `src/core/ocr/` (o que depende do Node fica em `scripts/o
   saída (nome cortado casa pelo começo; etiqueta de tier divergente penaliza) e pela quantidade
   do ícone dentro da faixa da rota. `recebePorTroca` usa o número do ícone quando cabe na faixa,
   senão o máximo. `ambigua` quando a segunda rota diferente fica a menos de 0,03.
+- **Revisão** (`revisao.ts`, `paraTroca.ts`): regras da tela de importação, puras e testadas.
+  `montarRevisao` junta as prints (mesma troca em duas prints fica com a leitura mais
+  confiável) e marca de início só as confiáveis, com restante e fora do plano; ambígua começa
+  desmarcada até o usuário escolher a rota (`escolherRota`). Filtro por degrau
+  (`degrauDaTroca`, `resumoPorDegrau`: "Mercado → Nível 1" … "Nível 6 → Nível 7",
+  "→ Moeda Corvo", "⚠ Para conferir") e `marcarVisiveis`, que pula ambígua, sem restante e já
+  no plano. `novaTrocaDaRevisao` usa **sempre** `custoBaseEfetivo(rota)`: a barganha da print
+  é ignorada.
 - Para melhorar: mande prints novas para `data/prints/`, acrescente o gabarito em
   `esperado.json`, rode `npm run ocr:modelos` e confira com `npm run ocr:avaliar`.
 - Limitação conhecida: os navios (Shipwrecked…, Combat Raft…) só têm nome em inglês nos dados,

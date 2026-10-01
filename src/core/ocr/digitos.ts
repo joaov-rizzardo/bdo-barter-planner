@@ -1,10 +1,4 @@
-/** Imagem RGB(A) crua, como vem do sharp ou de um `ImageData` do canvas. */
-export interface ImagemCrua {
-  largura: number;
-  altura: number;
-  canais: number;
-  dados: ArrayLike<number>;
-}
+import type { ImagemCrua } from './imagem';
 
 interface Componente {
   x0: number;

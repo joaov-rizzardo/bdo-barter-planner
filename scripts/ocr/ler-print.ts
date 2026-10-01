@@ -10,7 +10,7 @@
 import { mkdir, readFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import { loadGameData } from '../../src/data';
-import { casarLinhas, type TrocaLida } from '../../src/core/ocr/casamento';
+import type { TrocaLida } from '../../src/core/ocr/casamento';
 import type { BarterRoute } from '../../src/core/models/types';
 import type { ModeloDeDigito } from '../../src/core/ocr/digitos';
 import modelos from '../../src/core/ocr/modelosDigitos.json';
@@ -177,7 +177,8 @@ async function main() {
       >)
     : {};
 
-  const worker = await criarLeitorDeTexto();
+  const leitor = await criarLeitorDeTexto();
+  const dados = { islands: data.islands, routes: data.routes, items };
   const resultado: Record<string, unknown[]> = {};
   let acertos = 0;
   let total = 0;
@@ -186,8 +187,7 @@ async function main() {
       const debug = opcoes.debug ? join(opcoes.debug, basename(arquivo, '.png')) : null;
       if (debug) await mkdir(debug, { recursive: true });
 
-      const linhas = await lerPrint(worker, arquivo, modelos as ModeloDeDigito[], debug);
-      const trocas = casarLinhas(linhas, { islands: data.islands, routes: data.routes, items });
+      const { trocas } = await lerPrint(leitor, arquivo, dados, modelos as ModeloDeDigito[], debug);
 
       if (opcoes.avaliar) {
         const esperado = gabarito[basename(arquivo)];
@@ -213,7 +213,7 @@ async function main() {
       } else imprimir(arquivo, trocas, opcoes.detalhes);
     }
   } finally {
-    await worker.terminate();
+    await leitor.encerrar();
   }
   if (opcoes.json) console.log(JSON.stringify(resultado, null, 2));
   if (opcoes.avaliar) console.log(`\nacerto: ${acertos}/${total} campos`);

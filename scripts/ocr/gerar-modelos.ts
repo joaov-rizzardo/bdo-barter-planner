@@ -17,7 +17,9 @@ import {
   type NumeroIsolado,
 } from '../../src/core/ocr/digitos';
 import { extrairLinhasDePermuta, type Caixa } from '../../src/core/ocr/layout';
-import { criarLeitorDeTexto, lerTextoDaTela, recortar } from './comum';
+import { recortar } from '../../src/core/ocr/imagem';
+import { lerTextoDaPrint } from '../../src/core/ocr/pipeline';
+import { abrirImagem, criarLeitorDeTexto } from './comum';
 
 const PASTA = 'data/prints';
 const SAIDA = 'src/core/ocr/modelosDigitos.json';
@@ -41,14 +43,15 @@ const esperado = JSON.parse(await readFile(join(PASTA, 'esperado.json'), 'utf8')
   Esperado[]
 >;
 
-const worker = await criarLeitorDeTexto();
+const leitor = await criarLeitorDeTexto();
 const amostras: Amostra[] = [];
 const descartes: string[] = [];
 
 try {
   for (const [print, rotulos] of Object.entries(esperado)) {
     const arquivo = join(PASTA, print);
-    const texto = await lerTextoDaTela(worker, arquivo);
+    const imagem = await abrirImagem(arquivo);
+    const texto = await lerTextoDaPrint(imagem, leitor.lerTexto());
     const linhas = extrairLinhasDePermuta(texto);
     if (linhas.length !== rotulos.length) {
       descartes.push(`${print}: ${linhas.length} linhas lidas, ${rotulos.length} no gabarito`);
@@ -62,7 +65,7 @@ try {
       onde: string,
       limiar?: number,
     ) => {
-      const img = await recortar(arquivo, caixa);
+      const img = recortar(imagem, caixa);
       const numero = img ? isolarNumero(img, alturaDigito, limiar) : null;
       const rotulo = String(valor);
       if (!numero || numero.glifos.length !== rotulo.length) {
@@ -106,7 +109,7 @@ try {
     }
   }
 } finally {
-  await worker.terminate();
+  await leitor.encerrar();
 }
 
 const modelosDe = (lista: Amostra[]): ModeloDeDigito[] =>

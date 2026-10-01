@@ -8,7 +8,8 @@ export function normalizarNome(texto: string): string {
       .replace(/\p{Diacritic}/gu, '')
       .toLowerCase()
       // Tudo até a etiqueta de tier sai junto: o OCR costuma grudar lixo antes dela.
-      .replace(/^.*?(nivel|nv)\s*\.?\s*\d+\s*[\])|il1]?/, '')
+      // O dígito da etiqueta às vezes sai como letra parecida ("NivelS" = Nível 5).
+      .replace(/^.*?(nivel|nv)\s*\.?\s*[\dslio]{1,2}\b\s*[\])|il1]?/, '')
       .replace(/[^a-z0-9 ]+/g, ' ')
       .replace(/\s+/g, ' ')
       .trim()

@@ -10,6 +10,7 @@ describe('texto lido pelo OCR', () => {
     expect(normalizarNome('nn [Nível 2] Item de Resgate')).toBe('item de resgate');
     expect(normalizarNome('INível 11 Espinha de Peixe')).toBe('espinha de peixe');
     expect(normalizarNome('Sangue de Palhaço')).toBe('sangue de palhaco');
+    expect(normalizarNome('[NivelS] Larva Branca')).toBe('larva branca');
   });
 
   it('lê o tier da etiqueta nos dois formatos do jogo', () => {

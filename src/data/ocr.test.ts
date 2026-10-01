@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { casarLinhas } from '../core/ocr/casamento';
 import todos from '../core/ocr/fixtures/todos-850.linhas.json';
 import { extrairLinhasDePermuta } from '../core/ocr/layout';
+import { lerTrocasDaPrint } from '../core/ocr/pipeline';
 import { loadGameData } from './index';
 
 describe('leitura de print casada com as rotas reais', () => {
@@ -38,5 +39,26 @@ describe('leitura de print casada com as rotas reais', () => {
     const [semIcone] = casarLinhas([{ ...linha!, qtdEntrada: null, qtdSaida: null }], dados);
     expect(comIcone!.recebePorTroca).toBe(2);
     expect(semIcone!.recebePorTroca).toBe(3);
+  });
+
+  it('o pipeline devolve as posições do OCR na escala da print original', async () => {
+    // Print vazia do tamanho original; o OCR falso devolve as linhas da fixture
+    // na escala da imagem ampliada, como o tesseract faria.
+    const imagem = { largura: 850, altura: 585, canais: 4, dados: new Uint8Array(850 * 585 * 4) };
+    const lerTexto = async (preparada: { largura: number }) => {
+      const escala = preparada.largura / 850;
+      return todos.map((l) => ({
+        ...l,
+        x0: l.x0 * escala,
+        y0: l.y0 * escala,
+        x1: l.x1 * escala,
+        y1: l.y1 * escala,
+      }));
+    };
+    const { texto, trocas } = await lerTrocasDaPrint(imagem, lerTexto, dados, []);
+    expect(texto[0]!.x0).toBeCloseTo(todos[0]!.x0, 5);
+    expect(trocas.map((t) => ilha(t.rota.islandId))).toContain('Ilha de Lema');
+    // Sem modelos de dígito, nenhuma quantidade é lida: vale o máximo da faixa.
+    expect(trocas.every((t) => t.linha.qtdSaida === null)).toBe(true);
   });
 });
