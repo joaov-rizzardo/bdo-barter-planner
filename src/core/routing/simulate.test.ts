@@ -218,7 +218,8 @@ describe('sobrepeso e transferência para o inventário', () => {
       }),
     ];
     const ctx = contexto({ maxWeightLt: 1000, overweight: sobrepeso(2000, 'transferencia') }, [
-      'base',
+      'A',
+      'C',
     ]);
     const r = simularViagem(trades, ctx, 0);
 
@@ -226,7 +227,7 @@ describe('sobrepeso e transferência para o inventário', () => {
     // 2 x i3 (1800 LT) empilham: um pack só, um slot só.
     expect(r.trip.inventory).toEqual([{ itemId: 'i3', qty: 2 }]);
     const transfer = r.trip.steps.find((s) => s.kind === 'transfer');
-    expect(transfer).toMatchObject({ islandId: 'base', item: { itemId: 'i3', qty: 2 } });
+    expect(transfer).toMatchObject({ islandId: 'A', item: { itemId: 'i3', qty: 2 } });
     // o pack volta com o personagem e entra na descarga da base
     expect(r.trip.unloadAtBase).toEqual([
       { itemId: 'i2', qty: 1 },
@@ -246,7 +247,8 @@ describe('sobrepeso e transferência para o inventário', () => {
         hasStock: true,
       });
     const ctx = contexto({ maxWeightLt: 1000, overweight: sobrepeso(4000, 'transferencia') }, [
-      'base',
+      'A',
+      'B',
     ]);
     // Uma terceira troca depois: a t2 não é a última, então precisa aliviar na hora.
     const r = simularViagem([t('t1', 'A'), t('t2', 'B'), t('t3', 'C')], ctx, 0);
@@ -254,6 +256,41 @@ describe('sobrepeso e transferência para o inventário', () => {
     expect(r.ok).toBe(false);
     expect(r.falha).toMatchObject({ tradeId: 't2', motivo: 'peso' });
     expect(r.trip.inventory).toHaveLength(1);
+  });
+
+  it('não transfere quando o gerente mais próximo é a base: volta e faz outra viagem', () => {
+    const trades = [
+      troca({
+        id: 't1',
+        islandId: 'A',
+        inputItemId: 'i1',
+        inputQtyPerTrade: 1,
+        outputItemId: 'i3',
+        outputQtyPerTrade: 2,
+        hasStock: true,
+      }),
+      troca({
+        id: 't2',
+        islandId: 'B',
+        inputItemId: 'i1',
+        inputQtyPerTrade: 1,
+        outputItemId: 'i2',
+        outputQtyPerTrade: 1,
+        hasStock: true,
+      }),
+    ];
+    // A está a 100 da base e a 141 de C: o gerente mais próximo é a própria base.
+    const ctx = contexto({ maxWeightLt: 1000, overweight: sobrepeso(2000, 'transferencia') }, [
+      'base',
+      'C',
+    ]);
+    const r = simularViagem(trades, ctx, 0);
+
+    expect(r.ok).toBe(false);
+    expect(r.falha).toMatchObject({ tradeId: 't1', motivo: 'peso' });
+    expect(r.trip.inventory).toEqual([]);
+    // Sozinha, a t1 volta pesada e descarrega na base.
+    expect(simularViagem([trades[0]!], ctx, 0).ok).toBe(true);
   });
 
   it('modo "transferência" recusa o sobrepeso que a transferência não resolve', () => {

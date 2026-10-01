@@ -231,7 +231,9 @@ export function simularViagem(
     if (exigirAlivio && pesoDaCarga(restante, items) > limits.maxWeightLt) return false;
 
     const destino = gerenteMaisProximo();
-    if (destino === null) return false;
+    // Se o gerente mais próximo é a própria base, vale mais voltar, descarregar
+    // e deixar o resto para outra viagem do que passar 1 slot e seguir.
+    if (destino === null || destino === baseIslandId) return false;
     // Sem sobrepeso liberado, só dá para usar o gerente da própria parada:
     // navegar até outro porto já estouraria o peso.
     if (!limits.overweight && peso() > limits.maxWeightLt && destino !== posicao) return false;

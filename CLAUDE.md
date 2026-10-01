@@ -218,6 +218,8 @@ Decisões do usuário que simplificam o cálculo — não reintroduza campos par
   ou sem sobrepeso — também serve para resolver falta de slot. O pack sai da carga em
   definitivo: viaja com o personagem e entra em `Trip.inventory` e no descarregamento da base.
   `melhorTransferencia` nunca leva o que ainda vai ser gasto nas trocas seguintes da viagem.
+  Se o gerente de cais mais próximo é a **própria base**, não há transferência: vale mais voltar,
+  descarregar e deixar o resto para outra viagem (a simulação falha e o solver divide).
 - **Distância máxima pesado**: `ShipSettings.maxOverweightDistance` (padrão
   `DISTANCIA_PADRAO_SOBREPESO` = 300.000 unidades) vira `CargoLimits.overweight.maxDistance`.
   `simularViagem` soma os trechos `sail` navegados acima do peso livre (`Trip.overweightDistance`);
