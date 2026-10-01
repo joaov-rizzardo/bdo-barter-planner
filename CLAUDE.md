@@ -18,6 +18,9 @@ e gerar um roteiro de viagem com checklist. Interface em português do Brasil.
 | `npm run lint`          | ESLint                                                           |
 | `npm run format`        | Prettier                                                         |
 | `npm run data:convert`  | Regenera `src/data/*.json` a partir de `data/raw/*.json`         |
+| `npm run ocr:ler -- <img>` | Lê prints da janela de permuta (`--json`, `--debug <pasta>`)  |
+| `npm run ocr:avaliar`   | Roda o leitor nas prints de `data/prints/` e confere o gabarito  |
+| `npm run ocr:modelos`   | Regenera os modelos de dígito a partir das prints rotuladas      |
 
 Rust ainda não está instalado nesta máquina; sem ele só o frontend roda (`npm run dev`) — o
 shell Rust do Tauri nunca foi compilado aqui. Para rodar/compilar no Linux:
@@ -61,6 +64,7 @@ src/
                    armazém/gerente de cais e validação de base/descarga)
     cargo/         cargo.ts: peso, slots (empilha x não empilha) e limite de espaço livre
     balance/       itemBalance.ts: demanda/produção por item, déficit, sobra e estoque
+    ocr/           leitor de prints da janela de permuta (layout, dígitos, casamento)
     routing/       distance.ts (euclidiana + matriz de overrides), precedence.ts,
                    order.ts (Held-Karp exato até 10 trocas + vizinho mais próximo/2-opt),
                    simulate.ts (passos da viagem com peso/slots), solver.ts (RouteSolver),
@@ -75,7 +79,8 @@ src/
 src-tauri/         shell Rust: main.rs, lib.rs, tauri.conf.json, capabilities/
 data/raw/          arquivos brutos do projeto original (fonte do conversor)
 public/icons/      215 ícones .webp dos itens
-scripts/           convert-data.mjs
+data/prints/       prints de teste do leitor de OCR + esperado.json (gabarito)
+scripts/           convert-data.mjs; ocr/ (leitor de prints em Node: sharp + tesseract.js)
 ```
 
 Regra central: **toda regra de negócio vive em `src/core/` e é testável sem DOM**. A UI lê o
@@ -292,6 +297,32 @@ Decisões do usuário que simplificam o cálculo — não reintroduza campos par
 - `simularViagem` calcula o carregamento da base (só o que não é produzido na própria
   viagem), recalcula peso e slots depois de cada passo e registra os picos.
 - Portos sem coordenada entram no roteiro com distância zero e aviso `porto_sem_coordenada`.
+
+## Leitor de prints (OCR) — em teste, ainda fora da tela
+
+Lê a janela "Informações de Permuta" e devolve as trocas (porto, itens, recebe por troca,
+restante). Por enquanto só existe o script (`npm run ocr:ler`); a ideia é levar para a tela
+depois, reaproveitando `src/core/ocr/` (o que depende do Node fica em `scripts/ocr/comum.ts`).
+
+- **Texto**: tesseract.js (`por`, PSM sparse) na print inteira, ampliada para ~2400 px, com o
+  maior canal de cor invertido (texto colorido sobre fundo escuro vira texto escuro).
+- **Layout** (`layout.ts`): cada troca é ancorada em "Restante:" e/ou "Barganha:" (basta uma; o
+  laranja às vezes sai "parganna!"). Tudo é medido em múltiplos da altura da linha (`h`), por
+  isso vale para qualquer resolução. Linha cortada na borda (sem nenhuma âncora) fica de fora.
+- **Quantidade do ícone** (`digitos.ts`): o tesseract erra muito nesses dígitos pequenos, então
+  há um classificador próprio: isola os pixels brancos (histerese: núcleo > 175, borda > 110),
+  descarta moldura/arte pelo tamanho esperado do dígito (0,135 h) e compara cada glifo (grade
+  6×9 + proporção) com `modelosDigitos.json` (vizinho mais próximo). Os modelos saem de
+  `npm run ocr:modelos`, que colhe os dígitos das prints rotuladas (ícones e números de
+  distância) e mede o acerto deixando cada print de fora.
+- **Casamento** (`casamento.ts`): pontua **todas** as rotas por semelhança de ilha + entrada +
+  saída (nome cortado casa pelo começo; etiqueta de tier divergente penaliza) e pela quantidade
+  do ícone dentro da faixa da rota. `recebePorTroca` usa o número do ícone quando cabe na faixa,
+  senão o máximo. `ambigua` quando a segunda rota diferente fica a menos de 0,03.
+- Para melhorar: mande prints novas para `data/prints/`, acrescente o gabarito em
+  `esperado.json`, rode `npm run ocr:modelos` e confira com `npm run ocr:avaliar`.
+- Limitação conhecida: os navios (Shipwrecked…, Combat Raft…) só têm nome em inglês nos dados,
+  então eles casam só pelos itens e pela quantidade e costumam sair como ambíguos.
 
 ## Convenções
 

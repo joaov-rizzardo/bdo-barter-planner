@@ -1,0 +1,42 @@
+{
+  "todos-850.png": [
+    { "ilha": "Litoral de Olvia", "entrada": "[Nv. 6] Espada Preciosa do Deserto de Valência", "qtdEntrada": 1, "saida": "[Nv. 7] Saco de Farinha de Trigo Dourado", "qtdSaida": 1, "restante": 5, "distancia": 1400 },
+    { "ilha": "Arehaza", "entrada": "[Nível 5] Bebida de 37 anos", "qtdEntrada": 1, "saida": "[Nv. 6] Chá Tradicional de Arehaza", "qtdSaida": 1, "restante": 5, "distancia": 14440 },
+    { "ilha": "Ilha de Teste", "entrada": "[Nível 1] Bolsa de Sementes de Cerejeira", "qtdEntrada": 1, "saida": "[Nível 2] Mastro de Navio Pirata", "qtdSaida": 3, "restante": 10, "distancia": 2790 },
+    { "ilha": "Ilha de Lema", "entrada": "[Nv. 6] Escultura de Kamasylvia", "qtdEntrada": 1, "saida": "[Nv. 7] Fragmento de Pedra do Marinheiro Arco-íris", "qtdSaida": 1, "restante": 5, "distancia": 1990 },
+    { "ilha": "Ilha de Arita", "entrada": "[Nível 1] Estátua de Gaivota Empoeirada", "qtdEntrada": 1, "saida": "[Nível 2] Item de Resgate Marítimo", "qtdSaida": 2, "restante": 10, "distancia": 970 },
+    { "ilha": "Ilha de Iliya", "entrada": "[Nv. 6] Fragmento de Cristal da Lua", "qtdEntrada": 1, "saida": "[Nv. 7] Colar de Conchas do Artesão", "qtdSaida": 1, "restante": 5, "distancia": 3130 }
+  ],
+  "moeda-corvo-848.png": [
+    { "ilha": "Ilha de Halmad", "entrada": "[Nível 4] Manual de Treinamento do Barqueiro", "qtdEntrada": 1, "saida": "Moeda Corvo", "qtdSaida": 159, "restante": 1, "distancia": 6820 },
+    { "ilha": "Ilha de Kashuma", "entrada": "[Nível 4] Estátua de Dragão com o Pescoço Cortado", "qtdEntrada": 1, "saida": "Moeda Corvo", "qtdSaida": 187, "restante": 1, "distancia": 7040 },
+    { "ilha": "Ilha de Derko", "entrada": "[Nível 4] Remédio de Mil Doenças", "qtdEntrada": 1, "saida": "Moeda Corvo", "qtdSaida": 188, "restante": 1, "distancia": 9710 },
+    { "ilha": "Ninho do Corvo", "entrada": "[Nível 4] Fio de Cinco Cores", "qtdEntrada": 1, "saida": "Moeda Corvo", "qtdSaida": 591, "restante": 0, "distancia": 5710 },
+    { "ilha": "Shipwrecked Haran's Cargo Ship", "entrada": "[Nível 4] Líquido de Lava Endurecido", "qtdEntrada": 1, "saida": "Moeda Corvo", "qtdSaida": 177, "restante": 1, "distancia": 9180 },
+    { "ilha": "Unfinished Adrift Vessel", "entrada": "[Nível 4] Elmo da Cavalaria Naval", "qtdEntrada": 1, "saida": "Moeda Corvo", "qtdSaida": 229, "restante": 1, "distancia": 11420 }
+  ],
+  "t5-t6-695.png": [
+    { "ilha": "Arehaza", "entrada": "[Nível 5] Bebida de 37 anos", "qtdEntrada": 1, "saida": "[Nv. 6] Chá Tradicional de Arehaza", "qtdSaida": 1, "restante": 5, "distancia": 13540 },
+    { "ilha": "Grandiha", "entrada": "[Nível 5] Retrato de Forma dos Ancestrais", "qtdEntrada": 1, "saida": "[Nv. 6] Escultura de Kamasylvia", "qtdSaida": 1, "restante": 0, "distancia": 8910 },
+    { "ilha": "Ilha de Hakoven", "entrada": "[Nível 5] Castiçal Dourado da Melhor Qualidade", "qtdEntrada": 1, "saida": "[Nv. 6] Espada Preciosa do Deserto de Valência", "qtdSaida": 1, "restante": 5, "distancia": 13470 },
+    { "ilha": "Porto da Noite Profunda", "entrada": "[Nível 5] Quartzo Azul Claro", "qtdEntrada": 1, "saida": "[Nv. 6] Fragmento de Cristal da Lua", "qtdSaida": 1, "restante": 0, "distancia": 8900 },
+    { "ilha": "Doca Dal Le", "entrada": "[Nível 5] Larva Branca Empalhada", "qtdEntrada": 1, "saida": "[Nv. 6] Baú de Chapéu Tradicional da Melhor Qualidade", "qtdSaida": 1, "restante": 5, "distancia": 14410 },
+    { "ilha": "Ilha Hee-Mo", "entrada": "[Nível 5] Escama de Peixe Dourada", "qtdEntrada": 1, "saida": "[Nv. 6] Baú de Caqui Especial de Nam-Po", "qtdSaida": 1, "restante": 5, "distancia": 14840 }
+  ],
+  "t0-t1-1403.png": [
+    { "ilha": "Ilha de Eveto", "entrada": "Barra de Estanho", "qtdEntrada": 10, "saida": "[Nível 1] Espinha de Peixe Gigante", "qtdSaida": 1, "restante": 10, "distancia": 550 },
+    { "ilha": "Ilha de Duch", "entrada": "Sangue de Palhaço", "qtdEntrada": 50, "saida": "[Nível 1] Rosa Azul Seca", "qtdSaida": 1, "restante": 10, "distancia": 760 },
+    { "ilha": "Ilha de Luivano", "entrada": "Barra de Estanho", "qtdEntrada": 10, "saida": "[Nível 1] Areia Dourada", "qtdSaida": 1, "restante": 10, "distancia": 610 },
+    { "ilha": "Ilha de Mariveno", "entrada": "Carne Moída de Pássaro", "qtdEntrada": 100, "saida": "[Nível 1] Estilhaço de Jarra Ancestral", "qtdSaida": 1, "restante": 10, "distancia": 150 },
+    { "ilha": "Ilha de Runa de Ephde", "entrada": "Pena Chique", "qtdEntrada": 30, "saida": "[Nível 1] Rosa Azul Seca", "qtdSaida": 1, "restante": 10, "distancia": 870 },
+    { "ilha": "Ilha de Paratama", "entrada": "Folha de Espírito", "qtdEntrada": 200, "saida": "[Nível 1] Bolsa de Sementes de Flor Loa", "qtdSaida": 1, "restante": 0, "distancia": 810 }
+  ],
+  "t2-t3-1079.png": [
+    { "ilha": "Ilha de Marlene", "entrada": "[Nível 2] Tábua de Pedra Ampla", "qtdEntrada": 1, "saida": "[Nível 3] Rede de Lopters", "qtdSaida": 2, "restante": 10, "distancia": 870 },
+    { "ilha": "Ilha de Angie", "entrada": "[Nível 2] Torre de Pedras Balanceada", "qtdEntrada": 1, "saida": "[Nível 3] Ampulheta Antiga", "qtdSaida": 2, "restante": 10, "distancia": 1510 },
+    { "ilha": "Ilha de Weita", "entrada": "[Nível 2] Item de Resgate Marítimo", "qtdEntrada": 1, "saida": "[Nível 3] Xícara com Decoração de Esqueleto", "qtdSaida": 3, "restante": 4, "distancia": 230 },
+    { "ilha": "Ilha de Kanvera", "entrada": "[Nível 2] Pepino do Mar de Narvo", "qtdEntrada": 1, "saida": "[Nível 3] Binóculos de Batedor", "qtdSaida": 2, "restante": 10, "distancia": 640 },
+    { "ilha": "Ilha de Arakil", "entrada": "[Nível 2] Água Potável Purificada", "qtdEntrada": 1, "saida": "[Nível 3] Sangue Espesso de Criatura", "qtdSaida": 2, "restante": 10, "distancia": 810 },
+    { "ilha": "Ilha de Taramura", "entrada": "[Nível 2] Marmita da Vila da Ilha", "qtdEntrada": 1, "saida": "[Nível 3] Estilhaço de Estalactite", "qtdSaida": 2, "restante": 10, "distancia": 1360 }
+  ]
+}
