@@ -82,6 +82,8 @@ export interface Trip {
   sold: ItemQty[];
   peakWeightLt: number;
   peakSlots: number;
+  /** Distância navegada acima do peso livre (somada na viagem). */
+  overweightDistance: number;
   /** Marinheiros a desequipar na base antes de sair (os mais pesados primeiro). */
   sailorsUnequipped: number;
   /** Peso liberado por esses marinheiros; soma-se ao peso livre da viagem. */

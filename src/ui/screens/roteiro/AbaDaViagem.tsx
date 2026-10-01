@@ -9,7 +9,14 @@ export function AbaDaViagem({ viagem }: { viagem: ViagemDoRoteiro }) {
   return (
     <div className="rounded-lg border border-mar/60 bg-casco">
       <div className="grid gap-3 border-b border-mar/60 p-4 sm:grid-cols-4">
-        <Indicador rotulo="Distância" valor={`${fmtInteiro(Math.round(viagem.distancia))} un.`} />
+        <Indicador
+          rotulo="Distância"
+          valor={`${fmtInteiro(Math.round(viagem.distancia))} un.${
+            viagem.distanciaPesada > 0
+              ? ` (${fmtInteiro(Math.round(viagem.distanciaPesada))} pesado)`
+              : ''
+          }`}
+        />
         <Indicador
           rotulo="Pico de peso"
           valor={`${fmtLt(viagem.picoPesoLt)}${viagem.emSobrepeso ? ' (sobrepeso)' : ''}`}

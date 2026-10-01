@@ -143,6 +143,20 @@ export function NavioSection() {
               }
             />
           </Field>
+          <Field
+            label="Distância máxima pesado"
+            hint="Quanto o navio pode navegar acima do peso livre em cada viagem, somando todos os trechos. O roteiro alivia antes (venda, transferência) ou divide as trocas em outra viagem."
+            htmlFor="distancia-sobrepeso"
+          >
+            <NumberInput
+              id="distancia-sobrepeso"
+              value={ship.maxOverweightDistance}
+              min={0}
+              step={10_000}
+              suffix="unidades"
+              onChange={(v) => setShip({ maxOverweightDistance: v })}
+            />
+          </Field>
           <p className="text-xs text-slate-500">
             Teto de 150% da capacidade total: a simulação aceita até {fmtLt(tetoDeCarga)} de carga
             planejada (o que já está a bordo conta no limite).

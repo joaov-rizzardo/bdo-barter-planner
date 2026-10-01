@@ -126,6 +126,9 @@ export type OverweightMode = 'qualquer' | 'transferencia';
 /** Peso padrão de um marinheiro recém-adicionado. */
 export const PESO_PADRAO_MARINHEIRO_LT = 200;
 
+/** Distância padrão que o navio pode navegar pesado numa viagem. */
+export const DISTANCIA_PADRAO_SOBREPESO = 300_000;
+
 /** Capacidade **livre** do navio, usada na simulação de carga. */
 export interface ShipSettings {
   /**
@@ -140,6 +143,11 @@ export interface ShipSettings {
   sailorsLt: number[];
   allowOverweight: boolean;
   overweightMode: OverweightMode;
+  /**
+   * Distância máxima navegada com o navio pesado (acima do peso livre) numa
+   * viagem, em unidades do mapa. Só vale com `allowOverweight` ligado.
+   */
+  maxOverweightDistance: number;
   /** Vender T7 no gerente de cais quando for preciso aliviar o navio. */
   sellT7: boolean;
 }

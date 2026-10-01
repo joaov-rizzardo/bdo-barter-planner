@@ -157,6 +157,28 @@ describe('sobrepeso e transferência para o inventário', () => {
     expect(r.trip.inventory).toEqual([]);
   });
 
+  it('conta a distância navegada pesado na volta para a base', () => {
+    const ctx = contexto({
+      maxWeightLt: 900,
+      overweight: { ...sobrepeso(2000, 'qualquer'), maxDistance: 100 },
+    });
+    const r = simularViagem(cadeiaEmCadeia, ctx, 0);
+
+    expect(r.ok).toBe(true);
+    expect(r.trip.overweightDistance).toBe(100);
+  });
+
+  it('não volta pesado para a base além da distância máxima', () => {
+    const ctx = contexto({
+      maxWeightLt: 900,
+      overweight: { ...sobrepeso(2000, 'qualquer'), maxDistance: 50 },
+    });
+    const r = simularViagem(cadeiaEmCadeia, ctx, 0);
+
+    expect(r.ok).toBe(false);
+    expect(r.falha).toMatchObject({ tradeId: 'tC', motivo: 'peso' });
+  });
+
   it('não passa do teto de sobrepeso', () => {
     const ctx = contexto({ maxWeightLt: 900, overweight: sobrepeso(1500, 'qualquer') });
     const r = simularViagem(cadeiaEmCadeia, ctx, 0);

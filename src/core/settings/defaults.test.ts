@@ -91,3 +91,18 @@ describe('venda de T7 nas configurações', () => {
     expect(normalizeSettings({ ship: { sellT7: false } }).ship.sellT7).toBe(false);
   });
 });
+
+describe('distância máxima navegando pesado', () => {
+  it('vem com 300.000, inclusive em configurações salvas antes dela', () => {
+    expect(normalizeSettings(null).ship.maxOverweightDistance).toBe(300_000);
+    expect(normalizeSettings({ ship: { freeWeightLt: 9000 } }).ship.maxOverweightDistance).toBe(
+      300_000,
+    );
+  });
+
+  it('não aceita valor negativo', () => {
+    expect(
+      normalizeSettings({ ship: { maxOverweightDistance: -10 } }).ship.maxOverweightDistance,
+    ).toBe(0);
+  });
+});

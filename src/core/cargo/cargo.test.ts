@@ -117,6 +117,7 @@ describe('limites do navio', () => {
     sailorsLt: [] as number[],
     allowOverweight: false,
     overweightMode: 'transferencia',
+    maxOverweightDistance: 300_000,
     sellT7: true,
   } as const;
 
@@ -131,6 +132,7 @@ describe('limites do navio', () => {
     // já a bordo: 20.000 - 10.000; teto de 30.000 => 20.000 de carga planejada
     expect(limiteDeSobrepeso(limites)).toBe(20_000);
     expect(limites.overweight?.mode).toBe('transferencia');
+    expect(limites.overweight?.maxDistance).toBe(300_000);
   });
 });
 

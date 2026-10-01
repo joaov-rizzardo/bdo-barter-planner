@@ -30,6 +30,8 @@ export interface PassoDoRoteiro {
 export interface ViagemDoRoteiro {
   index: number;
   distancia: number;
+  /** Parte da distância navegada acima do peso livre. */
+  distanciaPesada: number;
   picoPesoLt: number;
   picoSlots: number;
   passos: PassoDoRoteiro[];
@@ -156,6 +158,7 @@ export function useRoteiro({ usarProgresso = false }: OpcoesDoRoteiro = {}): Rot
       return {
         index: trip.index,
         distancia: trip.distance,
+        distanciaPesada: trip.overweightDistance,
         picoPesoLt: trip.peakWeightLt,
         picoSlots: trip.peakSlots,
         passos,

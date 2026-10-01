@@ -14,6 +14,9 @@ import type { ItemIndex } from '../models/itemIndex';
 import type { Trade } from '../models/types';
 import type { RouteContext, Trip, TripStep, TripStop } from './types';
 
+/** Folga para comparar distâncias somadas em ponto flutuante. */
+const EPS = 1e-6;
+
 export interface FalhaDeCarga {
   tradeId: string | null;
   motivo: 'peso' | 'slots';
@@ -87,6 +90,11 @@ function juntarItens(...listas: readonly ItemQty[][]): ItemQty[] {
  * **depois** de uma troca que deixou o navio pesado, se o próprio porto tem
  * gerente de cais. O vendido sai da carga e não volta para a base. T7 que
  * ainda vai ser gasto numa troca seguinte da viagem nunca é vendido.
+ *
+ * Distância pesada (`limits.overweight.maxDistance`): os trechos navegados
+ * acima do peso livre somam na viagem e não podem passar do limite. Volta
+ * pesada para a base, venda e transferência que estourariam o limite não
+ * acontecem; sem alívio possível, a viagem falha por peso.
  */
 export function simularViagem(
   trades: readonly Trade[],
@@ -97,6 +105,7 @@ export function simularViagem(
   const teto = limiteDeSobrepeso(limits);
   const modo = limits.overweight?.mode ?? null;
   const gerentes = ctx.wharfIslandIds ?? [];
+  const limiteDistancia = limits.overweight?.maxDistance ?? Infinity;
 
   const steps: TripStep[] = [];
   let cargo: Cargo = calcularCarregamento(trades, items);
@@ -106,6 +115,8 @@ export function simularViagem(
   let posicao = baseIslandId;
   let distancia = 0;
   let emSobrepeso = false;
+  let distanciaPesada = 0;
+  let tradeAtual: string | null = null;
   const inventory: ItemQty[] = [];
   const sold: ItemQty[] = [];
 
@@ -127,10 +138,22 @@ export function simularViagem(
     falha ??= { tradeId, motivo, pesoLt: estado.weightLt, slots: estado.slots };
   };
 
+  const pesado = () => peso() > limits.maxWeightLt;
+
+  /** O trecho até `destino` cabe no limite de distância navegada pesado. */
+  const podeNavegar = (destino: string): boolean =>
+    destino === posicao ||
+    !pesado() ||
+    distanciaPesada + distances.between(posicao, destino) <= limiteDistancia + EPS;
+
   const navegarPara = (destino: string) => {
     if (destino === posicao) return;
     const trecho = distances.between(posicao, destino);
     distancia += trecho;
+    if (pesado()) {
+      distanciaPesada += trecho;
+      if (distanciaPesada > limiteDistancia + EPS) falhar(tradeAtual, 'peso', medir());
+    }
     steps.push({
       kind: 'sail',
       fromIslandId: posicao,
@@ -181,7 +204,7 @@ export function simularViagem(
 
     const doca =
       destino === null ? (gerentes.includes(posicao) ? posicao : null) : docaNoCaminho(destino);
-    if (doca === null) return false;
+    if (doca === null || !podeNavegar(doca)) return false;
 
     navegarPara(doca);
     for (const { itemId, qty } of vendaveis) cargo = remover(cargo, itemId, qty) ?? cargo;
@@ -212,6 +235,7 @@ export function simularViagem(
     // Sem sobrepeso liberado, só dá para usar o gerente da própria parada:
     // navegar até outro porto já estouraria o peso.
     if (!limits.overweight && peso() > limits.maxWeightLt && destino !== posicao) return false;
+    if (!podeNavegar(destino)) return false;
 
     navegarPara(destino);
     cargo = restante;
@@ -252,6 +276,7 @@ export function simularViagem(
   };
 
   for (const [i, trade] of trades.entries()) {
+    tradeAtual = trade.id;
     const entrada = trade.inputQtyPerTrade * trade.plannedTrades;
     const saida = trade.outputQtyPerTrade * trade.plannedTrades;
 
@@ -302,7 +327,7 @@ export function simularViagem(
       slots() <= limits.slots &&
       (trade.islandId === baseIslandId ||
         peso() <= limits.maxWeightLt ||
-        (limits.overweight !== undefined && peso() <= teto));
+        (limits.overweight !== undefined && peso() <= teto && podeNavegar(baseIslandId)));
     if (voltaParaDescarregar) {
       registrarParada(trade);
       continue;
@@ -325,6 +350,8 @@ export function simularViagem(
     registrarParada(trade);
   }
 
+  // Pesado e longe demais da base para voltar assim: tenta aliviar antes.
+  if (pesado() && !podeNavegar(baseIslandId)) tentarTransferencia(true, new Map());
   navegarPara(baseIslandId);
 
   const unloadAtBase = juntarItens(itensDaCarga(cargo), inventory);
@@ -350,6 +377,7 @@ export function simularViagem(
       sold,
       peakWeightLt: picoPeso,
       peakSlots: picoSlots,
+      overweightDistance: distanciaPesada,
       sailorsUnequipped: 0,
       sailorsUnequippedLt: 0,
     },

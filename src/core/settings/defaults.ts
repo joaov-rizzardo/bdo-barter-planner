@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import { PESO_PADRAO_MARINHEIRO_LT, type AppSettings } from '../models/types';
+import {
+  DISTANCIA_PADRAO_SOBREPESO,
+  PESO_PADRAO_MARINHEIRO_LT,
+  type AppSettings,
+} from '../models/types';
 
 /**
  * Padrões do app. Os slots são o espaço **livre** do navio; o peso livre é
@@ -20,6 +24,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     sailorsLt: [],
     allowOverweight: false,
     overweightMode: 'transferencia',
+    maxOverweightDistance: DISTANCIA_PADRAO_SOBREPESO,
     sellT7: true,
   },
   route: {
@@ -51,6 +56,7 @@ export const appSettingsSchema = z.object({
     sailorsLt: z.array(z.number().positive()),
     allowOverweight: z.boolean(),
     overweightMode: z.enum(['qualquer', 'transferencia']),
+    maxOverweightDistance: z.number().nonnegative(),
     sellT7: z.boolean(),
   }),
   route: z.object({
@@ -126,6 +132,12 @@ export function normalizeSettings(entrada: unknown): AppSettings {
       sailorsLt: marinheiros,
       allowOverweight: bruto.ship?.allowOverweight === true,
       overweightMode: modoSobrepeso,
+      // Configurações salvas antes do limite de distância ficam com o padrão.
+      maxOverweightDistance: limitar(
+        bruto.ship?.maxOverweightDistance ?? DEFAULT_SETTINGS.ship.maxOverweightDistance,
+        0,
+        Number.MAX_SAFE_INTEGER,
+      ),
       // Configurações salvas antes da venda de T7 ficam com o padrão (ligado).
       sellT7:
         typeof bruto.ship?.sellT7 === 'boolean' ? bruto.ship.sellT7 : DEFAULT_SETTINGS.ship.sellT7,

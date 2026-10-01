@@ -8,6 +8,8 @@ export type Cargo = ReadonlyMap<string, number>;
 export interface OverweightRule {
   limitLt: number;
   mode: OverweightMode;
+  /** Distância máxima navegada acima do peso livre numa viagem. Ausente: sem limite. */
+  maxDistance?: number;
 }
 
 export interface CargoLimits {
@@ -31,6 +33,7 @@ export function limitesDoNavio(ship: ShipSettings): CargoLimits {
     overweight: {
       limitLt: ship.freeWeightLt + 0.5 * ship.totalWeightLt,
       mode: ship.overweightMode,
+      maxDistance: ship.maxOverweightDistance,
     },
   };
 }
