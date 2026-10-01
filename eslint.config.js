@@ -5,7 +5,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 
 export default [
-  { ignores: ['dist', 'src-tauri/target', 'src/data/*.json'] },
+  { ignores: ['dist', 'src-tauri/target', 'src/data/*.json', 'public/tesseract'] },
   js.configs.recommended,
   {
     files: ['**/*.{ts,tsx}'],

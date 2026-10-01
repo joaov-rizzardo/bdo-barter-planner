@@ -302,12 +302,19 @@ Decisões do usuário que simplificam o cálculo — não reintroduza campos par
 
 Lê a janela "Informações de Permuta" e devolve as trocas (porto, itens, recebe por troca,
 restante). Por enquanto só existe o script (`npm run ocr:ler`); a tela está sendo feita pelo
-plano em `docs/plano-importacao-prints.md` (etapa 1 concluída).
+plano em `docs/plano-importacao-prints.md`.
 
 - **Pipeline** (`pipeline.ts`): `lerTrocasDaPrint(imagem, lerTexto, dados, modelos)` faz tudo
   sobre `ImagemCrua` (RGB do sharp ou RGBA do `ImageData`). O OCR do texto é uma porta
   (`LerTexto`): o Node passa o tesseract.js de `scripts/ocr/comum.ts`, a tela vai passar o do
-  navegador. O core não depende de sharp, canvas nem tesseract.
+  navegador (`src/ui/ocr/leitorNavegador.ts`). O core não depende de sharp, canvas nem
+  tesseract.
+- **Tesseract offline**: `scripts/preparar-tesseract.mjs` (roda no `predev`/`prebuild`) gera
+  `public/tesseract/worker.min.js` com o esbuild (o pacote v7 não publica o worker do
+  navegador; o padrão seria a CDN) e copia as 3 variantes LSTM do núcleo `.wasm.js`. Os dois
+  ficam no `.gitignore`; o idioma `public/tesseract/lang/por.traineddata.gz` é versionado.
+  `criarLeitorDePrints()` usa só esses caminhos locais (`workerBlobURL: false`) e reaproveita
+  um worker entre as prints (~4–6 s por print no navegador).
 - **Texto**: tesseract.js (`por`, PSM sparse) na print inteira. `prepararParaOcr`
   (`imagem.ts`): maior canal de cor invertido, ampliação **bilinear** até ~2400 px e contraste
   esticado (1% de corte). Medido no gabarito: empata com o lanczos do sharp; o bicúbico faz o

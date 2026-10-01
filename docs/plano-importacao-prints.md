@@ -153,7 +153,7 @@ Script e tela usam **o mesmo pipeline**; só muda quem abre a imagem e quem roda
 
 1. **Concluída.** Pipeline puro no core (`imagem`, `pipeline`, `paraTroca`, `revisao` com os filtros por degrau)
    com testes. O script migra para ele, e `npm run ocr:avaliar` tem que continuar em 148/150.
-2. Adaptador do navegador e tesseract local em `public/`, conferido manualmente no
+2. **Concluída.** Adaptador do navegador e tesseract local em `public/`, conferido manualmente no
    `npm run dev`.
 3. Modal com upload, Ctrl+V, arrastar e soltar, e leitura com progresso.
 4. Revisão:
@@ -195,3 +195,10 @@ Script e tela usam **o mesmo pipeline**; só muda quem abre a imagem e quem roda
 - A altura da linha passou a ser a mediana dos passos entre linhas vizinhas (antes era o menor
   passo, que errava 2–3 px e deslocava o recorte do número do ícone).
 - "Marcar todas" também pula as trocas que já estão no plano, além de ambíguas e sem restante.
+
+## Notas da etapa 2
+
+- O worker é gerado com o esbuild a partir de `tesseract.js/src/worker-script/browser` (o
+  `global` do fonte vira `self`); núcleo e idioma são servidos de `public/tesseract/`.
+- Conferido no Chrome com o `npm run dev`: mesmas trocas do script, ~4,3 s e ~5,8 s por print,
+  sem nenhuma requisição para fora do `localhost`.

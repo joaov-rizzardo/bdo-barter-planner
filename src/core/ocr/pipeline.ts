@@ -19,6 +19,29 @@ export interface ResultadoDaPrint {
   trocas: TrocaLida[];
 }
 
+/** Forma mínima do resultado do tesseract.js (`recognize(..., { blocks: true })`). */
+export interface BlocoDoTesseract {
+  paragraphs: {
+    lines: { text: string; bbox: { x0: number; y0: number; x1: number; y1: number } }[];
+  }[];
+}
+
+/** Linhas de texto não vazias do resultado do tesseract.js, Node ou navegador. */
+export function linhasDosBlocos(
+  blocos: readonly BlocoDoTesseract[] | null | undefined,
+): LinhaOcr[] {
+  const linhas: LinhaOcr[] = [];
+  for (const bloco of blocos ?? []) {
+    for (const paragrafo of bloco.paragraphs) {
+      for (const linha of paragrafo.lines) {
+        const texto = linha.text.trim();
+        if (texto) linhas.push({ texto, ...linha.bbox });
+      }
+    }
+  }
+  return linhas;
+}
+
 /** OCR do texto da print, com as posições na escala da imagem original. */
 export async function lerTextoDaPrint(imagem: ImagemCrua, lerTexto: LerTexto): Promise<LinhaOcr[]> {
   const { imagem: preparada, escala } = prepararParaOcr(imagem);

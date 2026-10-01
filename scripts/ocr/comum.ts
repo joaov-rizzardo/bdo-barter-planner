@@ -11,9 +11,9 @@ import { createWorker, PSM } from 'tesseract.js';
 import type { DadosDoCasamento } from '../../src/core/ocr/casamento';
 import type { ModeloDeDigito } from '../../src/core/ocr/digitos';
 import type { ImagemCrua } from '../../src/core/ocr/imagem';
-import type { LinhaOcr } from '../../src/core/ocr/layout';
 import {
   lerTrocasDaPrint,
+  linhasDosBlocos,
   type LerTexto,
   type ResultadoDaPrint,
 } from '../../src/core/ocr/pipeline';
@@ -49,16 +49,7 @@ export async function criarLeitorDeTexto(): Promise<LeitorDeTexto> {
       if (debug) await writeFile(join(debug, 'tela.png'), png);
 
       const { data } = await worker.recognize(png, {}, { blocks: true });
-      const linhas: LinhaOcr[] = [];
-      for (const bloco of data.blocks ?? []) {
-        for (const paragrafo of bloco.paragraphs) {
-          for (const linha of paragrafo.lines) {
-            const texto = linha.text.trim();
-            if (texto) linhas.push({ texto, ...linha.bbox });
-          }
-        }
-      }
-      return linhas;
+      return linhasDosBlocos(data.blocks);
     };
 
   return { lerTexto, encerrar: () => worker.terminate().then(() => undefined) };
