@@ -156,7 +156,7 @@ Script e tela usam **o mesmo pipeline**; só muda quem abre a imagem e quem roda
 2. **Concluída.** Adaptador do navegador e tesseract local em `public/`, conferido manualmente no
    `npm run dev`.
 3. **Concluída.** Modal com upload, Ctrl+V, arrastar e soltar, e leitura com progresso.
-4. Revisão:
+4. **Concluída.** Revisão:
    - seleção e edição;
    - filtros por degrau e marcação em lote;
    - ambíguas, duplicadas e "já no plano";
@@ -212,3 +212,16 @@ Script e tela usam **o mesmo pipeline**; só muda quem abre a imagem e quem roda
   segue normal (o aviso de "sem imagem" só aparece quando não veio nada).
 - Conferido no Chrome: duas prints pelo campo de arquivo e uma colada, lidas em sequência, com
   o resultado de cada print aparecendo enquanto as outras ainda são lidas.
+
+## Notas da etapa 4
+
+- A revisão cresce a cada print lida (`incluirLeitura`), sem esperar as outras; o campo
+  `editado` impede que a leitura de outra print desfaça o que o usuário já mexeu.
+- Descoberto no teste: as alternativas próximas nem sempre trazem a rota certa (navios com nome
+  só em inglês). Cada troca agora tem `outrosPortos` — os outros portos com os mesmos itens,
+  primeiro os que aceitam o número lido no ícone. O seletor aparece nas ambíguas e, nas
+  confirmadas, pelo link "trocar porto".
+- A tabela também deixa editar o restante (caso o OCR leia errado), limitado ao teto da rota.
+- Conferido no Chrome (com o `localStorage` salvo antes e restaurado depois): 3 prints, 17 trocas
+  sem a repetida, filtros com contagem, escolha dos navios nas ambíguas e 5 trocas de Moeda
+  Corvo no plano com a barganha base da rota (21.650), não a da print.

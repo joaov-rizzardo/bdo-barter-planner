@@ -32,6 +32,20 @@ describe('leitura de print casada com as rotas reais', () => {
     expect(trocas.every((t) => t.confianca > 0.9 && !t.ambigua)).toBe(true);
   });
 
+  it('oferece os outros portos com os mesmos itens, primeiro os que aceitam o número lido', () => {
+    const [linha] = extrairLinhasDePermuta(todos).slice(2, 3);
+    // Ilha de Teste: Bolsa de Sementes de Cerejeira → Mastro de Navio Pirata, ícone 3.
+    const [troca] = casarLinhas([{ ...linha!, qtdEntrada: 1, qtdSaida: 3 }], dados);
+    const { rota, outrosPortos } = troca!;
+    expect(outrosPortos.length).toBeGreaterThan(0);
+    for (const r of outrosPortos) {
+      expect([r.giveItemId, r.receiveItemId]).toEqual([rota.giveItemId, rota.receiveItemId]);
+      expect(r.islandId).not.toBe(rota.islandId);
+    }
+    const aceita = outrosPortos.map((r) => r.receiveQtyMin <= 3 && 3 <= r.receiveQtyMax);
+    expect(aceita).toEqual([...aceita].sort((a, b) => Number(b) - Number(a)));
+  });
+
   it('usa a quantidade do ícone quando ela cabe na faixa da rota', () => {
     const [linha] = extrairLinhasDePermuta(todos).slice(4);
     // Arita: Estátua de Gaivota → Item de Resgate Marítimo, faixa 2–3.

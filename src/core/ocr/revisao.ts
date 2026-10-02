@@ -17,6 +17,8 @@ export interface ItemDeRevisao {
   rota: BarterRoute;
   /** A mais provável seguida das alternativas próximas. */
   opcoes: BarterRoute[];
+  /** Outros portos com os mesmos itens: escolha manual quando nenhuma opção serve. */
+  outrosPortos: BarterRoute[];
   /** `false` enquanto a leitura for ambígua e o usuário não escolheu a rota. */
   rotaConfirmada: boolean;
   recebePorTroca: number;
@@ -26,6 +28,8 @@ export interface ItemDeRevisao {
   selecionada: boolean;
   /** A mesma troca (porto e itens) já está no plano. */
   jaNoPlano: boolean;
+  /** O usuário mexeu nesta troca: uma leitura nova da mesma troca não a substitui. */
+  editado: boolean;
 }
 
 export type MotivoParaConferir =
@@ -75,42 +79,66 @@ function valoresDaRota(leitura: TrocaLida, rota: BarterRoute) {
 }
 
 /**
- * Monta a lista da revisão a partir das prints lidas. A mesma troca vista em
- * duas prints (rolagem da janela) aparece uma vez só, com a leitura de maior
- * confiança. Começam marcadas só as confiáveis, com trocas restantes e fora
- * do plano.
+ * Inclui na revisão as trocas de mais uma print, na ordem em que aparecem. A
+ * mesma troca vista em outra print (rolagem da janela) não se repete: fica a
+ * leitura de maior confiança, a menos que o usuário já tenha mexido nela.
+ * Começam marcadas só as confiáveis, com trocas restantes e fora do plano.
  */
+export function incluirLeitura(
+  itens: readonly ItemDeRevisao[],
+  { origem, trocas }: LeituraDePrint,
+  plano: readonly Trade[],
+): ItemDeRevisao[] {
+  const resultado = [...itens];
+  for (const [i, leitura] of trocas.entries()) {
+    const rota = leitura.rota;
+    const item: ItemDeRevisao = {
+      id: `${origem}#${i}`,
+      origem,
+      leitura,
+      rota,
+      opcoes: [rota, ...leitura.alternativas],
+      outrosPortos: leitura.outrosPortos,
+      rotaConfirmada: !leitura.ambigua,
+      ...valoresDaRota(leitura, rota),
+      hasStock: false,
+      selecionada: false,
+      jaNoPlano: estaNoPlano(rota, plano),
+      editado: false,
+    };
+    item.selecionada = motivoParaPular(item) === null;
+
+    const repetida = resultado.findIndex((r) => assinatura(r.leitura.rota) === assinatura(rota));
+    if (repetida === -1) resultado.push(item);
+    else {
+      const anterior = resultado[repetida]!;
+      if (!anterior.editado && leitura.confianca > anterior.leitura.confianca) {
+        resultado[repetida] = item;
+      }
+    }
+  }
+  return resultado;
+}
+
+/** Revisão de várias prints de uma vez (ver `incluirLeitura`). */
 export function montarRevisao(
   leituras: readonly LeituraDePrint[],
   plano: readonly Trade[],
 ): ItemDeRevisao[] {
-  const porAssinatura = new Map<string, ItemDeRevisao>();
-  for (const { origem, trocas } of leituras) {
-    for (const [i, leitura] of trocas.entries()) {
-      const rota = leitura.rota;
-      const jaNoPlano = estaNoPlano(rota, plano);
-      const item: ItemDeRevisao = {
-        id: `${origem}#${i}`,
-        origem,
-        leitura,
-        rota,
-        opcoes: [rota, ...leitura.alternativas],
-        rotaConfirmada: !leitura.ambigua,
-        ...valoresDaRota(leitura, rota),
-        hasStock: false,
-        selecionada: false,
-        jaNoPlano,
-      };
-      item.selecionada = motivoParaPular(item) === null;
+  return leituras.reduce<ItemDeRevisao[]>((itens, l) => incluirLeitura(itens, l, plano), []);
+}
 
-      const chave = assinatura(rota);
-      const anterior = porAssinatura.get(chave);
-      if (!anterior || leitura.confianca > anterior.leitura.confianca) {
-        porAssinatura.set(chave, item);
-      }
-    }
-  }
-  return [...porAssinatura.values()];
+/** Edição feita pelo usuário (marcar, quantidade, trocas, restante, estoque). */
+export function editarItem(
+  item: ItemDeRevisao,
+  patch: Partial<
+    Pick<
+      ItemDeRevisao,
+      'selecionada' | 'recebePorTroca' | 'plannedTrades' | 'remainingTrades' | 'hasStock'
+    >
+  >,
+): ItemDeRevisao {
+  return { ...item, ...patch, editado: true };
 }
 
 /** O usuário escolheu a rota de uma troca (entre as opções da leitura). */
@@ -126,6 +154,7 @@ export function escolherRota(
     ...valoresDaRota(item.leitura, rota),
     jaNoPlano: estaNoPlano(rota, plano),
     selecionada: true,
+    editado: true,
   };
 }
 
@@ -282,7 +311,7 @@ export function marcarVisiveis(
       }
     }
     alteradas += 1;
-    return { ...item, selecionada: marcar };
+    return { ...item, selecionada: marcar, editado: true };
   });
   return { itens: novos, alteradas, puladas };
 }

@@ -8,7 +8,9 @@ import {
   FILTRO_CONFERIR,
   FILTRO_TODOS,
   degrauDaTroca,
+  editarItem,
   escolherRota,
+  incluirLeitura,
   marcarVisiveis,
   montarRevisao,
   motivosParaConferir,
@@ -75,6 +77,7 @@ const lida = (
     confianca: 0.95,
     ambigua: false,
     alternativas: [],
+    outrosPortos: [],
     origemDaQuantidade: 'maximo_da_faixa',
     ...resto,
   };
@@ -176,6 +179,16 @@ describe('montagem da revisão', () => {
     );
     expect(itens).toHaveLength(1);
     expect(itens[0]).toMatchObject({ origem: 'p2', remainingTrades: 5 });
+  });
+
+  it('a leitura nova da mesma troca não desfaz o que o usuário editou', () => {
+    const [a] = montarRevisao([{ origem: 'p1', trocas: [lida(t6t7, { confianca: 0.8 })] }], []);
+    const editado = editarItem(a!, { plannedTrades: 2 });
+    const depois = incluirLeitura([editado], { origem: 'p2', trocas: [lida(t6t7)] }, []);
+    expect(depois).toEqual([editado]);
+
+    const semEdicao = incluirLeitura([a!], { origem: 'p2', trocas: [lida(t6t7)] }, []);
+    expect(semEdicao[0]!.origem).toBe('p2');
   });
 
   it('escolher a rota de uma ambígua confirma, recalcula e marca', () => {

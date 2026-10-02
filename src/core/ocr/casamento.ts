@@ -20,6 +20,12 @@ export interface TrocaLida {
   ambigua: boolean;
   /** Outras rotas que ficaram perto da escolhida (no máximo 2), para o usuário conferir. */
   alternativas: BarterRoute[];
+  /**
+   * Os outros portos com os mesmos itens de entrada e saída da escolhida: a saída quando o
+   * nome do porto não foi lido direito. Primeiro os que aceitam o número lido no ícone,
+   * depois do mais para o menos provável.
+   */
+  outrosPortos: BarterRoute[];
   /** De onde veio `recebePorTroca`: número lido no ícone ou máximo da faixa da rota. */
   origemDaQuantidade: 'icone' | 'maximo_da_faixa';
 }
@@ -135,6 +141,21 @@ export function casarLinhas(linhas: readonly LinhaLida[], dados: DadosDoCasament
     }
 
     const { rota } = melhor;
+    // Mesmos itens em outros portos, sem repetir a escolhida nem as alternativas.
+    const outrosPortos: BarterRoute[] = [];
+    for (const n of notas) {
+      const r = n.rota;
+      if (r.giveItemId !== rota.giveItemId || r.receiveItemId !== rota.receiveItemId) continue;
+      if (vistas.has(assinatura(r))) continue;
+      vistas.add(assinatura(r));
+      outrosPortos.push(r);
+    }
+    // Primeiro os que aceitam o número lido no ícone (a ordem de nota se mantém dentro de cada grupo).
+    const aceita = (r: BarterRoute) =>
+      linha.qtdSaida !== null &&
+      linha.qtdSaida >= r.receiveQtyMin &&
+      linha.qtdSaida <= r.receiveQtyMax;
+    outrosPortos.sort((a, b) => Number(aceita(b)) - Number(aceita(a)));
     const naFaixa =
       linha.qtdSaida !== null &&
       linha.qtdSaida >= rota.receiveQtyMin &&
@@ -146,6 +167,7 @@ export function casarLinhas(linhas: readonly LinhaLida[], dados: DadosDoCasament
       confianca: Math.min(1, Math.max(0, melhor.nota)),
       ambigua: melhor.nota - segunda < MARGEM_AMBIGUA,
       alternativas,
+      outrosPortos,
       origemDaQuantidade: naFaixa ? 'icone' : 'maximo_da_faixa',
     });
   }
