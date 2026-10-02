@@ -193,6 +193,13 @@ Decisões do usuário que simplificam o cálculo — não reintroduza campos par
 - O modal de limite de barganha abre no clique de **Calcular rota** (antes de ir para o
   Roteiro) e informa excedente, passo em que a barganha acaba e refreshes necessários.
 - Déficit de item T0 aparece como "comprar" (vem do mercado), não como erro.
+- **Importar de prints** (`planejamento/importacao/`): modal com as prints (botão de arquivos,
+  Ctrl+V pelo `paste` da janela, arrastar e soltar), leitura em fila (`useLeitorDePrints`) e
+  revisão (`RevisaoDeTrocas`) que cresce a cada print lida. Filtro por degrau com
+  marcadas/total, "Marcar/Desmarcar todas" só nas visíveis, seletor de porto nas ambíguas (e
+  "trocar porto" nas outras) e edição de recebe/restante/trocas/estoque. As marcadas entram no
+  plano com `novaTrocaDaRevisao` (barganha **sempre** a calculada, nunca a da print). Com trocas
+  lidas, Esc e clique fora não fecham o modal (`Modal fechamentoRapido={false}`).
 
 ## Moeda Corvo
 
@@ -298,11 +305,11 @@ Decisões do usuário que simplificam o cálculo — não reintroduza campos par
   viagem), recalcula peso e slots depois de cada passo e registra os picos.
 - Portos sem coordenada entram no roteiro com distância zero e aviso `porto_sem_coordenada`.
 
-## Leitor de prints (OCR) — em teste, ainda fora da tela
+## Leitor de prints (OCR)
 
 Lê a janela "Informações de Permuta" e devolve as trocas (porto, itens, recebe por troca,
-restante). Por enquanto só existe o script (`npm run ocr:ler`); a tela está sendo feita pelo
-plano em `docs/plano-importacao-prints.md`.
+restante). Usado na tela (botão "Importar de prints" no Planejamento) e no script
+`npm run ocr:ler`. Plano e notas de cada etapa: `docs/plano-importacao-prints.md`.
 
 - **Pipeline** (`pipeline.ts`): `lerTrocasDaPrint(imagem, lerTexto, dados, modelos)` faz tudo
   sobre `ImagemCrua` (RGB do sharp ou RGBA do `ImageData`). O OCR do texto é uma porta
@@ -314,7 +321,9 @@ plano em `docs/plano-importacao-prints.md`.
   navegador; o padrão seria a CDN) e copia as 3 variantes LSTM do núcleo `.wasm.js`. Os dois
   ficam no `.gitignore`; o idioma `public/tesseract/lang/por.traineddata.gz` é versionado.
   `criarLeitorDePrints()` usa só esses caminhos locais (`workerBlobURL: false`) e reaproveita
-  um worker entre as prints (~4–6 s por print no navegador).
+  um worker entre as prints (~4–6 s por print no navegador). Só o tesseract roda em worker; o
+  preparo da imagem e o casamento travam a tela ~360 ms por print (medido na de 1403 px), por
+  isso o resto ficou na thread principal.
 - **Texto**: tesseract.js (`por`, PSM sparse) na print inteira. `prepararParaOcr`
   (`imagem.ts`): maior canal de cor invertido, ampliação **bilinear** até ~2400 px e contraste
   esticado (1% de corte). Medido no gabarito: empata com o lanczos do sharp; o bicúbico faz o

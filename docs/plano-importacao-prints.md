@@ -161,7 +161,7 @@ Script e tela usam **o mesmo pipeline**; só muda quem abre a imagem e quem roda
    - filtros por degrau e marcação em lote;
    - ambíguas, duplicadas e "já no plano";
    - inclusão no plano.
-5. Polimento:
+5. **Concluída.** Polimento:
    - mensagens de erro ("isso não parece a janela de permuta", "nenhuma troca encontrada");
    - documentação no `CLAUDE.md`;
    - teste ponta a ponta no navegador com as prints de `data/prints/`.
@@ -225,3 +225,14 @@ Script e tela usam **o mesmo pipeline**; só muda quem abre a imagem e quem roda
 - Conferido no Chrome (com o `localStorage` salvo antes e restaurado depois): 3 prints, 17 trocas
   sem a repetida, filtros com contagem, escolha dos navios nas ambíguas e 5 trocas de Moeda
   Corvo no plano com a barganha base da rota (21.650), não a da print.
+
+## Notas da etapa 5
+
+- Mensagens de erro: imagem que não abre ("use uma print em PNG ou JPG"), leitor de texto que
+  não carrega (com o comando que gera `public/tesseract/`) e print sem trocas (aviso por print).
+- Com trocas lidas ou leitura em andamento, Esc e clique fora não fecham o modal; o ✕ e o
+  "Cancelar" continuam fechando.
+- Medido: só ~360 ms de trava na thread principal por print (maior print). O pipeline fica
+  fora de um Web Worker próprio.
+- Pendente de validar fora daqui: Ctrl+V no WebKitGTK (Linux) e no WebView2 dentro do Tauri, já
+  que o shell Rust ainda não compila nesta máquina.

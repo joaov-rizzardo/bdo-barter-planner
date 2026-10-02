@@ -56,6 +56,8 @@ export function ModalImportarPrints({
       titulo="Importar trocas de prints"
       onFechar={onFechar}
       tamanho="xl"
+      // Com trocas lidas (ou lendo), Esc e clique fora não descartam o trabalho.
+      fechamentoRapido={!lendo && itens.length === 0}
       acoes={
         <>
           <button

@@ -23,7 +23,12 @@ const arquivoDoTesseract = (caminho: string) =>
 
 /** Print (arquivo escolhido ou colada) em RGBA cru. */
 export async function imagemDoArquivo(arquivo: Blob): Promise<ImagemCrua> {
-  const bitmap = await createImageBitmap(arquivo);
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(arquivo);
+  } catch {
+    throw new Error('Não foi possível abrir esta imagem. Use uma print em PNG ou JPG.');
+  }
   try {
     const canvas = document.createElement('canvas');
     canvas.width = bitmap.width;
@@ -69,15 +74,24 @@ export function criarLeitorDePrints(): LeitorDePrints {
 
   const obterWorker = () => {
     worker ??= (async () => {
-      const novo = await createWorker('por', OEM.LSTM_ONLY, {
-        workerPath: arquivoDoTesseract('worker.min.js'),
-        corePath: arquivoDoTesseract('core'),
-        langPath: arquivoDoTesseract('lang'),
-        // Carrega o worker direto da URL local (o padrão embrulha num blob).
-        workerBlobURL: false,
-      });
-      await novo.setParameters({ tessedit_pageseg_mode: PSM.SPARSE_TEXT });
-      return novo;
+      try {
+        const novo = await createWorker('por', OEM.LSTM_ONLY, {
+          workerPath: arquivoDoTesseract('worker.min.js'),
+          corePath: arquivoDoTesseract('core'),
+          langPath: arquivoDoTesseract('lang'),
+          // Carrega o worker direto da URL local (o padrão embrulha num blob).
+          workerBlobURL: false,
+        });
+        await novo.setParameters({ tessedit_pageseg_mode: PSM.SPARSE_TEXT });
+        return novo;
+      } catch {
+        // A próxima leitura tenta carregar de novo.
+        worker = null;
+        throw new Error(
+          'Não foi possível carregar o leitor de texto. Rode "npm run dev" ou "npm run build" ' +
+            'de novo para gerar os arquivos em public/tesseract/.',
+        );
+      }
     })();
     return worker;
   };
