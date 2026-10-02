@@ -155,7 +155,7 @@ Script e tela usam **o mesmo pipeline**; só muda quem abre a imagem e quem roda
    com testes. O script migra para ele, e `npm run ocr:avaliar` tem que continuar em 148/150.
 2. **Concluída.** Adaptador do navegador e tesseract local em `public/`, conferido manualmente no
    `npm run dev`.
-3. Modal com upload, Ctrl+V, arrastar e soltar, e leitura com progresso.
+3. **Concluída.** Modal com upload, Ctrl+V, arrastar e soltar, e leitura com progresso.
 4. Revisão:
    - seleção e edição;
    - filtros por degrau e marcação em lote;
@@ -202,3 +202,13 @@ Script e tela usam **o mesmo pipeline**; só muda quem abre a imagem e quem roda
   `global` do fonte vira `self`); núcleo e idioma são servidos de `public/tesseract/`.
 - Conferido no Chrome com o `npm run dev`: mesmas trocas do script, ~4,3 s e ~5,8 s por print,
   sem nenhuma requisição para fora do `localhost`.
+
+## Notas da etapa 3
+
+- Botão "Importar de prints" no topo do Planejamento abre `ModalImportarPrints` (`Modal` ganhou
+  `tamanho: 'xl'`). A fila fica em `useLeitorDePrints` (estado por print, progresso do lote,
+  um worker do tesseract reaproveitado e liberado ao fechar o modal).
+- O Ctrl+V escuta o `paste` da janela enquanto o modal está aberto; texto colado num campo
+  segue normal (o aviso de "sem imagem" só aparece quando não veio nada).
+- Conferido no Chrome: duas prints pelo campo de arquivo e uma colada, lidas em sequência, com
+  o resultado de cada print aparecendo enquanto as outras ainda são lidas.

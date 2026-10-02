@@ -1,5 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
 
+const LARGURAS = { md: 'max-w-lg', lg: 'max-w-3xl', xl: 'max-w-6xl' } as const;
+
 export function Modal({
   titulo,
   children,
@@ -11,7 +13,7 @@ export function Modal({
   children: ReactNode;
   acoes?: ReactNode;
   onFechar: () => void;
-  tamanho?: 'md' | 'lg';
+  tamanho?: 'md' | 'lg' | 'xl';
 }) {
   useEffect(() => {
     const aoTeclar = (e: KeyboardEvent) => {
@@ -33,7 +35,7 @@ export function Modal({
     >
       <div
         className={`flex max-h-[85vh] w-full flex-col rounded-lg border border-mar bg-casco p-5 shadow-xl ${
-          tamanho === 'lg' ? 'max-w-3xl' : 'max-w-lg'
+          LARGURAS[tamanho]
         }`}
       >
         <div className="flex items-start justify-between gap-4">
