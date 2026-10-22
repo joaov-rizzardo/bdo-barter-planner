@@ -89,7 +89,9 @@ function juntarItens(...listas: readonly ItemQty[][]): ItemQty[] {
  * dos slots (para na doca que menos desvia do caminho até o porto da troca) e
  * **depois** de uma troca que deixou o navio pesado, se o próprio porto tem
  * gerente de cais. O vendido sai da carga e não volta para a base. T7 que
- * ainda vai ser gasto numa troca seguinte da viagem nunca é vendido.
+ * ainda vai ser gasto numa troca seguinte da viagem nunca é vendido, e depois
+ * de uma transferência para o inventário não há mais venda (o personagem
+ * precisa estar sem itens no inventário para vender).
  *
  * Distância pesada (`limits.overweight.maxDistance`): os trechos navegados
  * acima do peso livre somam na viagem e não podem passar do limite. Volta
@@ -195,10 +197,12 @@ export function simularViagem(
   /**
    * Vende os T7 livres num gerente de cais. Com `destino`, vai até a doca que
    * menos desvia do caminho até lá; sem `destino`, só vende se a parada atual
-   * tiver gerente de cais (o navio pesado não pode sair navegando).
+   * tiver gerente de cais (o navio pesado não pode sair navegando). O jogo não
+   * deixa vender com itens no inventário do personagem: depois da
+   * transferência, não há mais venda na viagem.
    */
   const venderT7 = (destino: string | null, reservado: ReadonlyMap<string, number>): boolean => {
-    if (!ctx.sellT7) return false;
+    if (!ctx.sellT7 || inventory.length > 0) return false;
     const vendaveis = t7Vendaveis(cargo, items, reservado);
     if (vendaveis.length === 0) return false;
 

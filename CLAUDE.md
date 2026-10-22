@@ -277,7 +277,9 @@ Decisões do usuário que simplificam o cálculo — não reintroduza campos par
 - Vende todos os T7 livres a bordo; o que ainda vai ser gasto numa troca seguinte da viagem
   fica reservado. O vendido entra em `Trip.sold`, sai da carga e **não** volta na descarga da
   base. Passo novo no roteiro: `TripStep` com `kind: 'sell'`.
-- A venda antecipada é tentada antes da transferência para o inventário.
+- A venda antecipada é tentada antes da transferência para o inventário. O jogo não deixa vender
+  com itens no inventário do personagem: **depois da transferência não há mais venda** na viagem
+  (navio pesado pode vender normalmente).
 - A ordem das trocas decide se a venda resolve (o T7 precisa nascer antes do aperto): quando a
   ordem mais curta não cabe, o solver tenta o mesmo percurso ao contrário (mesma distância).
   Vale para qualquer viagem, não só com T7: o peso aperta em pontos diferentes conforme a
