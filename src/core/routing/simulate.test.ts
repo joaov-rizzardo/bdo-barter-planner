@@ -497,6 +497,47 @@ describe('venda de T7 no gerente de cais', () => {
     expect(r.falha).toMatchObject({ tradeId: 'pesada', motivo: 'peso' });
   });
 
+  it('depois da transferência para o inventário não vende mais na viagem', () => {
+    // 4 slots. A: 4 × i5 estoura os slots e, sem T7 a bordo, 1 i5 vai para o
+    // inventário. C: 2 × i6 estoura de novo; vender o i7 resolveria, mas o
+    // personagem está com o i5 no inventário.
+    const trocas = [
+      troca({
+        id: 't1',
+        islandId: 'A',
+        inputItemId: 'i1',
+        inputQtyPerTrade: 1,
+        outputItemId: 'i5',
+        plannedTrades: 4,
+        hasStock: true,
+      }),
+      troca({
+        id: 't2',
+        islandId: 'B',
+        inputItemId: 'i1',
+        inputQtyPerTrade: 1,
+        outputItemId: 'i7',
+        plannedTrades: 1,
+        hasStock: true,
+      }),
+      troca({
+        id: 't3',
+        islandId: 'C',
+        inputItemId: 'i5',
+        inputQtyPerTrade: 1,
+        outputItemId: 'i6',
+        outputQtyPerTrade: 2,
+        plannedTrades: 1,
+      }),
+    ];
+    const r = simularViagem(trocas, contexto({ slots: 4 }, ['A'], true), 0);
+
+    expect(r.trip.inventory).toEqual([{ itemId: 'i5', qty: 1 }]);
+    expect(r.trip.sold).toEqual([]);
+    expect(r.ok).toBe(false);
+    expect(r.falha).toMatchObject({ tradeId: 't3', motivo: 'slots' });
+  });
+
   it('a venda também libera slots', () => {
     const r = simularViagem([produzT7, produzT6], contexto({ slots: 3 }, ['B'], true), 0);
 

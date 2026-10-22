@@ -18,6 +18,9 @@ e gerar um roteiro de viagem com checklist. Interface em português do Brasil.
 | `npm run lint`          | ESLint                                                           |
 | `npm run format`        | Prettier                                                         |
 | `npm run data:convert`  | Regenera `src/data/*.json` a partir de `data/raw/*.json`         |
+| `npm run ocr:ler -- <img>` | Lê prints da janela de permuta (`--json`, `--debug <pasta>`)  |
+| `npm run ocr:avaliar`   | Roda o leitor nas prints de `data/prints/` e confere o gabarito  |
+| `npm run ocr:modelos`   | Regenera os modelos de dígito a partir das prints rotuladas      |
 
 Rust ainda não está instalado nesta máquina; sem ele só o frontend roda (`npm run dev`) — o
 shell Rust do Tauri nunca foi compilado aqui. Para rodar/compilar no Linux:
@@ -61,6 +64,7 @@ src/
                    armazém/gerente de cais e validação de base/descarga)
     cargo/         cargo.ts: peso, slots (empilha x não empilha) e limite de espaço livre
     balance/       itemBalance.ts: demanda/produção por item, déficit, sobra e estoque
+    ocr/           leitor de prints da janela de permuta (layout, dígitos, casamento)
     routing/       distance.ts (euclidiana + matriz de overrides), precedence.ts,
                    order.ts (Held-Karp exato até 10 trocas + vizinho mais próximo/2-opt),
                    simulate.ts (passos da viagem com peso/slots), solver.ts (RouteSolver),
@@ -75,7 +79,8 @@ src/
 src-tauri/         shell Rust: main.rs, lib.rs, tauri.conf.json, capabilities/
 data/raw/          arquivos brutos do projeto original (fonte do conversor)
 public/icons/      215 ícones .webp dos itens
-scripts/           convert-data.mjs
+data/prints/       prints de teste do leitor de OCR + esperado.json (gabarito)
+scripts/           convert-data.mjs; ocr/ (leitor de prints em Node: sharp + tesseract.js)
 ```
 
 Regra central: **toda regra de negócio vive em `src/core/` e é testável sem DOM**. A UI lê o
@@ -188,6 +193,18 @@ Decisões do usuário que simplificam o cálculo — não reintroduza campos par
 - O modal de limite de barganha abre no clique de **Calcular rota** (antes de ir para o
   Roteiro) e informa excedente, passo em que a barganha acaba e refreshes necessários.
 - Déficit de item T0 aparece como "comprar" (vem do mercado), não como erro.
+- **Importar de prints** (`planejamento/importacao/`): modal com as prints (botão de arquivos,
+  Ctrl+V pelo `paste` da janela, arrastar e soltar), leitura em fila (`useLeitorDePrints`) e
+  revisão (`RevisaoDeTrocas`) que cresce a cada print lida. Filtro por degrau com
+  marcadas/total, "Marcar/Desmarcar todas" só nas visíveis, seletor de porto nas ambíguas (e
+  "trocar porto" nas outras) e edição de recebe/restante/trocas/estoque. As marcadas entram no
+  plano com `novaTrocaDaRevisao` (barganha **sempre** a calculada, nunca a da print). Prints e
+  revisão vivem no store `useLeitorDePrints` (só em memória): fechar o modal não perde nada, a
+  leitura continua com ele fechado e só o botão "Limpar" (dois cliques) descarta tudo e libera o
+  worker. Ao abrir e depois de importar, `sincronizarComPlano` reconfere o que já está no plano:
+  essas trocas aparecem marcadas e travadas (linha esmaecida, sem edição) e `trocasSelecionadas`
+  nunca as leva de novo. O rodapé mostra a barganha ao vivo (`barganhaDaImportacao`): livre
+  (`MAX_BARTER` − plano), custo das marcadas e a sobra, ou quanto passa e os refreshes.
 
 ## Moeda Corvo
 
@@ -260,7 +277,9 @@ Decisões do usuário que simplificam o cálculo — não reintroduza campos par
 - Vende todos os T7 livres a bordo; o que ainda vai ser gasto numa troca seguinte da viagem
   fica reservado. O vendido entra em `Trip.sold`, sai da carga e **não** volta na descarga da
   base. Passo novo no roteiro: `TripStep` com `kind: 'sell'`.
-- A venda antecipada é tentada antes da transferência para o inventário.
+- A venda antecipada é tentada antes da transferência para o inventário. O jogo não deixa vender
+  com itens no inventário do personagem: **depois da transferência não há mais venda** na viagem
+  (navio pesado pode vender normalmente).
 - A ordem das trocas decide se a venda resolve (o T7 precisa nascer antes do aperto): quando a
   ordem mais curta não cabe, o solver tenta o mesmo percurso ao contrário (mesma distância).
   Vale para qualquer viagem, não só com T7: o peso aperta em pontos diferentes conforme a
@@ -292,6 +311,57 @@ Decisões do usuário que simplificam o cálculo — não reintroduza campos par
 - `simularViagem` calcula o carregamento da base (só o que não é produzido na própria
   viagem), recalcula peso e slots depois de cada passo e registra os picos.
 - Portos sem coordenada entram no roteiro com distância zero e aviso `porto_sem_coordenada`.
+
+## Leitor de prints (OCR)
+
+Lê a janela "Informações de Permuta" e devolve as trocas (porto, itens, recebe por troca,
+restante). Usado na tela (botão "Importar de prints" no Planejamento) e no script
+`npm run ocr:ler`. Plano e notas de cada etapa: `docs/plano-importacao-prints.md`.
+
+- **Pipeline** (`pipeline.ts`): `lerTrocasDaPrint(imagem, lerTexto, dados, modelos)` faz tudo
+  sobre `ImagemCrua` (RGB do sharp ou RGBA do `ImageData`). O OCR do texto é uma porta
+  (`LerTexto`): o Node passa o tesseract.js de `scripts/ocr/comum.ts`, a tela vai passar o do
+  navegador (`src/ui/ocr/leitorNavegador.ts`). O core não depende de sharp, canvas nem
+  tesseract.
+- **Tesseract offline**: `scripts/preparar-tesseract.mjs` (roda no `predev`/`prebuild`) gera
+  `public/tesseract/worker.min.js` com o esbuild (o pacote v7 não publica o worker do
+  navegador; o padrão seria a CDN) e copia as 3 variantes LSTM do núcleo `.wasm.js`. Os dois
+  ficam no `.gitignore`; o idioma `public/tesseract/lang/por.traineddata.gz` é versionado.
+  `criarLeitorDePrints()` usa só esses caminhos locais (`workerBlobURL: false`) e reaproveita
+  um worker entre as prints (~4–6 s por print no navegador). Só o tesseract roda em worker; o
+  preparo da imagem e o casamento travam a tela ~360 ms por print (medido na de 1403 px), por
+  isso o resto ficou na thread principal.
+- **Texto**: tesseract.js (`por`, PSM sparse) na print inteira. `prepararParaOcr`
+  (`imagem.ts`): maior canal de cor invertido, ampliação **bilinear** até ~2400 px e contraste
+  esticado (1% de corte). Medido no gabarito: empata com o lanczos do sharp; o bicúbico faz o
+  tesseract perder o texto vermelho.
+- **Layout** (`layout.ts`): cada troca é ancorada em "Restante:" e/ou "Barganha:" (basta uma; o
+  laranja às vezes sai "parganna!"). Tudo é medido em múltiplos da altura da linha (`h`, a
+  mediana dos passos entre linhas vizinhas — o menor passo errava por 2–3 px e tirava o recorte
+  do dígito do lugar), por isso vale para qualquer resolução. Linha cortada na borda (sem
+  nenhuma âncora) fica de fora.
+- **Quantidade do ícone** (`digitos.ts`): o tesseract erra muito nesses dígitos pequenos, então
+  há um classificador próprio: isola os pixels brancos (histerese: núcleo > 175, borda > 110),
+  descarta moldura/arte pelo tamanho esperado do dígito (0,135 h) e compara cada glifo (grade
+  6×9 + proporção) com `modelosDigitos.json` (vizinho mais próximo). Os modelos saem de
+  `npm run ocr:modelos`, que colhe os dígitos das prints rotuladas (ícones e números de
+  distância) e mede o acerto deixando cada print de fora.
+- **Casamento** (`casamento.ts`): pontua **todas** as rotas por semelhança de ilha + entrada +
+  saída (nome cortado casa pelo começo; etiqueta de tier divergente penaliza) e pela quantidade
+  do ícone dentro da faixa da rota. `recebePorTroca` usa o número do ícone quando cabe na faixa,
+  senão o máximo. `ambigua` quando a segunda rota diferente fica a menos de 0,03.
+- **Revisão** (`revisao.ts`, `paraTroca.ts`): regras da tela de importação, puras e testadas.
+  `montarRevisao` junta as prints (mesma troca em duas prints fica com a leitura mais
+  confiável) e marca de início só as confiáveis, com restante e fora do plano; ambígua começa
+  desmarcada até o usuário escolher a rota (`escolherRota`). Filtro por degrau
+  (`degrauDaTroca`, `resumoPorDegrau`: "Mercado → Nível 1" … "Nível 6 → Nível 7",
+  "→ Moeda Corvo", "⚠ Para conferir") e `marcarVisiveis`, que pula ambígua, sem restante e já
+  no plano. `novaTrocaDaRevisao` usa **sempre** `custoBaseEfetivo(rota)`: a barganha da print
+  é ignorada.
+- Para melhorar: mande prints novas para `data/prints/`, acrescente o gabarito em
+  `esperado.json`, rode `npm run ocr:modelos` e confira com `npm run ocr:avaliar`.
+- Limitação conhecida: os navios (Shipwrecked…, Combat Raft…) só têm nome em inglês nos dados,
+  então eles casam só pelos itens e pela quantidade e costumam sair como ambíguos.
 
 ## Convenções
 

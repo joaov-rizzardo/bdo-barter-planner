@@ -3,3 +3,8 @@ dist
 src-tauri/target
 *.local
 tsconfig.tsbuildinfo
+
+# Idiomas baixados pelo tesseract.js (scripts/ocr)
+*.traineddata
+public/tesseract/worker.min.js
+public/tesseract/core/

@@ -1,25 +1,34 @@
 import { useEffect, type ReactNode } from 'react';
 
+const LARGURAS = { md: 'max-w-lg', lg: 'max-w-3xl', xl: 'max-w-6xl' } as const;
+
 export function Modal({
   titulo,
   children,
   acoes,
   onFechar,
   tamanho = 'md',
+  fechamentoRapido = true,
 }: {
   titulo: string;
   children: ReactNode;
   acoes?: ReactNode;
   onFechar: () => void;
-  tamanho?: 'md' | 'lg';
+  tamanho?: 'md' | 'lg' | 'xl';
+  /**
+   * Esc e clique fora fecham o modal. Desligue quando fechar sem querer faria
+   * o usuário perder trabalho; o botão ✕ e as ações continuam fechando.
+   */
+  fechamentoRapido?: boolean;
 }) {
   useEffect(() => {
+    if (!fechamentoRapido) return;
     const aoTeclar = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onFechar();
     };
     window.addEventListener('keydown', aoTeclar);
     return () => window.removeEventListener('keydown', aoTeclar);
-  }, [onFechar]);
+  }, [onFechar, fechamentoRapido]);
 
   return (
     <div
@@ -28,12 +37,12 @@ export function Modal({
       aria-modal="true"
       aria-label={titulo}
       onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onFechar();
+        if (fechamentoRapido && e.target === e.currentTarget) onFechar();
       }}
     >
       <div
         className={`flex max-h-[85vh] w-full flex-col rounded-lg border border-mar bg-casco p-5 shadow-xl ${
-          tamanho === 'lg' ? 'max-w-3xl' : 'max-w-lg'
+          LARGURAS[tamanho]
         }`}
       >
         <div className="flex items-start justify-between gap-4">
