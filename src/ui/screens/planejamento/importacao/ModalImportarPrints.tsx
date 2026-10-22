@@ -1,7 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
-import { trocasSelecionadas } from '../../../../core/ocr/paraTroca';
-import { incluirLeitura, type ItemDeRevisao } from '../../../../core/ocr/revisao';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  barganhaDaImportacao,
+  trocasSelecionadas,
+  type BarganhaDaImportacao,
+} from '../../../../core/ocr/paraTroca';
 import { usePlanStore } from '../../../../store/planStore';
+import { useSettingsStore } from '../../../../store/settingsStore';
+import { fmtInteiro } from '../../../format';
 import { Aviso } from '../../../components/controls';
 import { Modal } from '../../../components/Modal';
 import { useLeitorDePrints } from '../../../hooks/useLeitorDePrints';
@@ -11,7 +16,8 @@ import { RevisaoDeTrocas } from './RevisaoDeTrocas';
 /**
  * Importação de trocas a partir de prints da janela "Informações de Permuta":
  * o usuário junta as prints (arquivos, Ctrl+V, arrastar), manda ler, revisa as
- * trocas encontradas e leva as marcadas para o plano.
+ * trocas encontradas e leva as marcadas para o plano. Prints e revisão ficam
+ * guardadas ao fechar o modal (`useLeitorDePrints`); só o "Limpar" descarta.
  */
 export function ModalImportarPrints({
   onFechar,
@@ -21,57 +27,80 @@ export function ModalImportarPrints({
   /** Chamado com o número de trocas que entraram no plano. */
   onImportar: (quantidade: number) => void;
 }) {
-  const { prints, progresso, lendo, adicionar, remover, lerTodas } = useLeitorDePrints();
+  const { prints, progresso, lendo, itens, adicionar, remover, lerTodas, setItens } =
+    useLeitorDePrints();
+  const sincronizar = useLeitorDePrints((s) => s.sincronizar);
+  const limpar = useLeitorDePrints((s) => s.limpar);
   const plano = usePlanStore((s) => s.trades);
   const adicionarAoPlano = usePlanStore((s) => s.adicionar);
-  const [itens, setItens] = useState<ItemDeRevisao[]>([]);
-  const incluidas = useRef(new Set<string>());
+  const barter = useSettingsStore((s) => s.settings.barter);
+  /** Limpar pede um segundo clique para confirmar. */
+  const [confirmandoLimpeza, setConfirmandoLimpeza] = useState(false);
 
-  // Cada print lida entra na revisão assim que termina, sem esperar as outras.
-  useEffect(() => {
-    const novas = prints.filter((p) => p.resultado && !incluidas.current.has(p.id));
-    if (novas.length === 0) return;
-    for (const p of novas) incluidas.current.add(p.id);
-    setItens((atuais) =>
-      novas.reduce(
-        (lista, p) => incluirLeitura(lista, { origem: p.nome, trocas: p.resultado!.trocas }, plano),
-        atuais,
-      ),
-    );
-  }, [prints, plano]);
+  // O plano pode ter mudado com o modal fechado (troca importada ou removida).
+  useEffect(() => sincronizar(), [plano, sincronizar]);
 
   const aLer = prints.filter((p) => p.estado === 'pendente' || p.estado === 'erro').length;
   const semTrocas = prints.filter((p) => p.estado === 'pronta' && p.resultado?.trocas.length === 0);
   const comErro = prints.filter((p) => p.estado === 'erro');
-  const marcadas = itens.filter((i) => i.selecionada).length;
+  const marcadas = itens.filter((i) => i.selecionada && !i.jaNoPlano).length;
+  const barganha = useMemo(
+    () => barganhaDaImportacao(itens, plano, barter),
+    [itens, plano, barter],
+  );
 
   const importar = () => {
     const trocas = trocasSelecionadas(itens);
     for (const troca of trocas) adicionarAoPlano(troca);
+    sincronizar();
     onImportar(trocas.length);
   };
+
+  const vazio = prints.length === 0 && itens.length === 0;
 
   return (
     <Modal
       titulo="Importar trocas de prints"
       onFechar={onFechar}
       tamanho="xl"
-      // Com trocas lidas (ou lendo), Esc e clique fora não descartam o trabalho.
-      fechamentoRapido={!lendo && itens.length === 0}
       acoes={
         <>
+          {vazio ? null : (
+            <button
+              type="button"
+              onClick={() => {
+                if (!confirmandoLimpeza) return setConfirmandoLimpeza(true);
+                limpar();
+                setConfirmandoLimpeza(false);
+              }}
+              onBlur={() => setConfirmandoLimpeza(false)}
+              title="Descarta as prints e as trocas lidas"
+              className={`rounded border px-3 py-1.5 text-sm ${
+                confirmandoLimpeza
+                  ? 'border-red-500 bg-red-500/20 text-red-200'
+                  : 'border-mar text-slate-300 hover:bg-mar/40'
+              }`}
+            >
+              {confirmandoLimpeza ? 'Clique de novo para limpar tudo' : 'Limpar'}
+            </button>
+          )}
+          {itens.length > 0 ? (
+            <ResumoDaBarganha barganha={barganha} />
+          ) : (
+            <span className="mr-auto" />
+          )}
           <button
             type="button"
             onClick={onFechar}
             className="rounded border border-mar px-3 py-1.5 text-sm text-slate-300 hover:bg-mar/40"
           >
-            Cancelar
+            Fechar
           </button>
           {aLer > 0 || lendo ? (
             <button
               type="button"
               disabled={lendo}
-              onClick={() => void lerTodas(prints)}
+              onClick={() => void lerTodas()}
               className={`rounded px-4 py-1.5 text-sm font-semibold disabled:opacity-40 ${
                 itens.length > 0 ? 'border border-ouro text-ouro' : 'bg-ouro text-abismo'
               }`}
@@ -117,5 +146,34 @@ export function ModalImportarPrints({
         {itens.length > 0 ? <RevisaoDeTrocas itens={itens} onMudar={setItens} /> : null}
       </div>
     </Modal>
+  );
+}
+
+/** Barganha das marcadas frente ao que o plano deixa livre; atualiza a cada marcação. */
+function ResumoDaBarganha({ barganha }: { barganha: BarganhaDaImportacao }) {
+  const { livre, doPlano, selecionadas, sobra, vouchersNecessarios } = barganha;
+  const passou = sobra < 0;
+  return (
+    <div
+      className="mr-auto flex flex-wrap items-baseline gap-x-3 gap-y-0.5 self-center text-xs"
+      title={`Plano atual já usa ${fmtInteiro(doPlano)} de barganha`}
+    >
+      <span className="text-slate-400">
+        Livre <span className="text-slate-200">{fmtInteiro(livre)}</span>
+      </span>
+      <span className="text-slate-400">
+        Marcadas <span className="text-ouro">−{fmtInteiro(selecionadas)}</span>
+      </span>
+      {passou ? (
+        <span className="font-semibold text-red-300">
+          Passa {fmtInteiro(-sobra)} ({vouchersNecessarios} refresh
+          {vouchersNecessarios === 1 ? '' : 'es'})
+        </span>
+      ) : (
+        <span className="text-slate-400">
+          Sobra <span className="font-semibold text-emerald-300">{fmtInteiro(sobra)}</span>
+        </span>
+      )}
+    </div>
   );
 }

@@ -198,8 +198,13 @@ Decisões do usuário que simplificam o cálculo — não reintroduza campos par
   revisão (`RevisaoDeTrocas`) que cresce a cada print lida. Filtro por degrau com
   marcadas/total, "Marcar/Desmarcar todas" só nas visíveis, seletor de porto nas ambíguas (e
   "trocar porto" nas outras) e edição de recebe/restante/trocas/estoque. As marcadas entram no
-  plano com `novaTrocaDaRevisao` (barganha **sempre** a calculada, nunca a da print). Com trocas
-  lidas, Esc e clique fora não fecham o modal (`Modal fechamentoRapido={false}`).
+  plano com `novaTrocaDaRevisao` (barganha **sempre** a calculada, nunca a da print). Prints e
+  revisão vivem no store `useLeitorDePrints` (só em memória): fechar o modal não perde nada, a
+  leitura continua com ele fechado e só o botão "Limpar" (dois cliques) descarta tudo e libera o
+  worker. Ao abrir e depois de importar, `sincronizarComPlano` reconfere o que já está no plano:
+  essas trocas aparecem marcadas e travadas (linha esmaecida, sem edição) e `trocasSelecionadas`
+  nunca as leva de novo. O rodapé mostra a barganha ao vivo (`barganhaDaImportacao`): livre
+  (`MAX_BARTER` − plano), custo das marcadas e a sobra, ou quanto passa e os refreshes.
 
 ## Moeda Corvo
 

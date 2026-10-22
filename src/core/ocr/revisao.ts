@@ -128,6 +128,22 @@ export function montarRevisao(
   return leituras.reduce<ItemDeRevisao[]>((itens, l) => incluirLeitura(itens, l, plano), []);
 }
 
+/**
+ * Reconfere "já no plano" depois que o plano mudou (a revisão fica guardada
+ * entre aberturas do modal). A troca que acabou de entrar no plano é
+ * desmarcada, para não ir duas vezes; o resto da revisão fica como estava.
+ */
+export function sincronizarComPlano(
+  itens: readonly ItemDeRevisao[],
+  plano: readonly Trade[],
+): ItemDeRevisao[] {
+  return itens.map((item) => {
+    const jaNoPlano = estaNoPlano(item.rota, plano);
+    if (jaNoPlano === item.jaNoPlano) return item;
+    return { ...item, jaNoPlano, selecionada: jaNoPlano ? false : item.selecionada };
+  });
+}
+
 /** Edição feita pelo usuário (marcar, quantidade, trocas, restante, estoque). */
 export function editarItem(
   item: ItemDeRevisao,
@@ -147,13 +163,14 @@ export function escolherRota(
   rota: BarterRoute,
   plano: readonly Trade[],
 ): ItemDeRevisao {
+  const jaNoPlano = estaNoPlano(rota, plano);
   return {
     ...item,
     rota,
     rotaConfirmada: true,
     ...valoresDaRota(item.leitura, rota),
-    jaNoPlano: estaNoPlano(rota, plano),
-    selecionada: true,
+    jaNoPlano,
+    selecionada: !jaNoPlano,
     editado: true,
   };
 }

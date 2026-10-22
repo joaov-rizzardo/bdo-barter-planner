@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { CROW_COIN_BASE_COST, CROW_COIN_ID } from '../data/tierRules';
+import { CROW_COIN_BASE_COST, CROW_COIN_ID, MAX_BARTER } from '../data/tierRules';
 import { ItemIndex } from '../models/itemIndex';
 import type { BarterItem, BarterRoute, Trade } from '../models/types';
 import type { TrocaLida } from './casamento';
-import { novaTrocaDaRevisao, trocasSelecionadas } from './paraTroca';
+import { barganhaDaImportacao, novaTrocaDaRevisao, trocasSelecionadas } from './paraTroca';
 import {
   FILTRO_CONFERIR,
   FILTRO_TODOS,
@@ -16,6 +16,7 @@ import {
   motivosParaConferir,
   passaNoFiltro,
   resumoPorDegrau,
+  sincronizarComPlano,
 } from './revisao';
 
 const item = (id: string, tier: BarterItem['tier']): BarterItem => ({
@@ -210,6 +211,14 @@ describe('montagem da revisão', () => {
     });
     expect(motivosParaConferir(escolhido)).toEqual([]);
   });
+  it('depois de importar, a troca que entrou no plano fica desmarcada', () => {
+    const itens = montarRevisao([{ origem: 'p1', trocas: [lida(t6t7), lida(t1t2)] }], []);
+    const plano = trocasSelecionadas(itens.slice(0, 1)).map((t) => ({ ...t, id: 'x' }));
+    const depois = sincronizarComPlano(itens, plano);
+    expect(depois[0]).toMatchObject({ jaNoPlano: true, selecionada: false });
+    expect(depois[1]).toBe(itens[1]);
+    expect(sincronizarComPlano(depois, [])[0]).toMatchObject({ jaNoPlano: false });
+  });
 });
 
 describe('filtro por degrau', () => {
@@ -283,5 +292,34 @@ describe('troca para o plano', () => {
       [],
     );
     expect(trocasSelecionadas(itens).map((t) => t.routeKey)).toEqual(['r67']);
+  });
+
+  it('o que já está no plano não vai de novo, mesmo marcado', () => {
+    const [a] = montarRevisao([{ origem: 'p1', trocas: [lida(t6t7)] }], []);
+    expect(trocasSelecionadas([{ ...a!, jaNoPlano: true, selecionada: true }])).toEqual([]);
+  });
+
+  it('calcula a barganha das marcadas sobre o que o plano deixa livre', () => {
+    const semReducao = {
+      levelReduction: 0,
+      economyPackage: false,
+      viceCaptain: false,
+      viceCaptainPercent: 0,
+    };
+    const itens = montarRevisao(
+      [{ origem: 'p1', trocas: [lida(t6t7, { restante: 2 }), lida(t1t2, { restante: 0 })] }],
+      [],
+    );
+    const custo = 2 * novaTrocaDaRevisao(itens[0]!).baseBarterCost;
+    const plano: Trade = {
+      ...novaTrocaDaRevisao(itens[1]!),
+      id: 'x',
+      plannedTrades: 1,
+      baseBarterCost: MAX_BARTER - 1000,
+    };
+    const r = barganhaDaImportacao(itens, [plano], semReducao);
+    expect(r).toMatchObject({ doPlano: MAX_BARTER - 1000, livre: 1000, selecionadas: custo });
+    expect(r.sobra).toBe(1000 - custo);
+    expect(r.vouchersNecessarios).toBe(custo > 1000 ? 1 : 0);
   });
 });

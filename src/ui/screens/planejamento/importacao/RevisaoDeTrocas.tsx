@@ -152,11 +152,13 @@ export function RevisaoDeTrocas({
               const motivos = motivosParaConferir(item);
               const faixa = rota.receiveQtyMin !== rota.receiveQtyMax;
               const teto = maxTrocasEfetivo(rota);
+              // Já no plano: aparece marcada, mas nada nela muda nem vai de novo.
+              const travada = item.jaNoPlano;
               return (
                 <tr
                   key={item.id}
                   className={`border-t border-mar/40 align-top ${
-                    item.selecionada ? 'bg-ouro/5' : 'odd:bg-abismo/40'
+                    travada ? 'opacity-50' : item.selecionada ? 'bg-ouro/5' : 'odd:bg-abismo/40'
                   }`}
                 >
                   <td className="px-2 py-2">
@@ -164,8 +166,9 @@ export function RevisaoDeTrocas({
                       type="checkbox"
                       aria-label={`Marcar troca em ${nomeDaIlha(rota.islandId, ilhas)}`}
                       className="size-4 accent-[var(--color-ouro)]"
-                      checked={item.selecionada}
-                      disabled={!item.rotaConfirmada}
+                      checked={item.selecionada || travada}
+                      disabled={!item.rotaConfirmada || travada}
+                      title={travada ? 'Já está no plano' : undefined}
                       onChange={(e) =>
                         trocar(item.id, (i) => editarItem(i, { selecionada: e.target.checked }))
                       }
@@ -218,7 +221,7 @@ export function RevisaoDeTrocas({
                         >
                           {nomeDaIlha(rota.islandId, ilhas)}
                         </span>
-                        {item.opcoes.length + item.outrosPortos.length > 1 ? (
+                        {!travada && item.opcoes.length + item.outrosPortos.length > 1 ? (
                           <button
                             type="button"
                             onClick={() => setTrocandoPorto((atual) => new Set(atual).add(item.id))}
@@ -256,6 +259,7 @@ export function RevisaoDeTrocas({
                           type="number"
                           aria-label="Recebe por troca"
                           className={campo}
+                          disabled={travada}
                           min={rota.receiveQtyMin}
                           max={rota.receiveQtyMax}
                           value={item.recebePorTroca}
@@ -287,6 +291,7 @@ export function RevisaoDeTrocas({
                       type="number"
                       aria-label="Trocas restantes"
                       className={campo}
+                      disabled={travada}
                       min={0}
                       max={teto}
                       value={item.remainingTrades}
@@ -306,6 +311,7 @@ export function RevisaoDeTrocas({
                       type="number"
                       aria-label="Trocas a fazer"
                       className={campo}
+                      disabled={travada}
                       min={1}
                       max={Math.max(1, item.remainingTrades)}
                       value={item.plannedTrades}
@@ -324,6 +330,7 @@ export function RevisaoDeTrocas({
                       aria-label="Tenho o item de entrada no armazém"
                       className="size-4 accent-[var(--color-ouro)]"
                       checked={item.hasStock}
+                      disabled={travada}
                       onChange={(e) =>
                         trocar(item.id, (i) => editarItem(i, { hasStock: e.target.checked }))
                       }
