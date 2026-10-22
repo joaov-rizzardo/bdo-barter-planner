@@ -341,8 +341,9 @@ restante). Usado na tela (botão "Importar de prints" no Planejamento) e no scri
 - **Layout** (`layout.ts`): cada troca é ancorada em "Restante:" e/ou "Barganha:" (basta uma; o
   laranja às vezes sai "parganna!"). Tudo é medido em múltiplos da altura da linha (`h`, a
   mediana dos passos entre linhas vizinhas — o menor passo errava por 2–3 px e tirava o recorte
-  do dígito do lugar), por isso vale para qualquer resolução. Linha cortada na borda (sem
-  nenhuma âncora) fica de fora.
+  do dígito do lugar), por isso vale para qualquer resolução. Linha cortada na borda fica de fora:
+  embaixo some a âncora; em cima somem o nome da ilha e o do item de entrada (`temNome`: 3+
+  letras), e o texto do cabeçalho que cai na faixa dela não vira troca.
 - **Quantidade do ícone** (`digitos.ts`): o tesseract erra muito nesses dígitos pequenos, então
   há um classificador próprio: isola os pixels brancos (histerese: núcleo > 175, borda > 110),
   descarta moldura/arte pelo tamanho esperado do dígito (0,135 h) e compara cada glifo (grade

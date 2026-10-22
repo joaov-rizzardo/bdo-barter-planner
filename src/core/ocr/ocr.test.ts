@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import todos from './fixtures/todos-850.linhas.json';
 import t5t6 from './fixtures/t5-t6-695.linhas.json';
+import cortada from './fixtures/t4-t5-cortada-839.linhas.json';
 import { extrairLinhasDePermuta } from './layout';
 import { normalizarNome, numeroDepoisDe, semelhanca, tierDaEtiqueta } from './texto';
 
@@ -55,6 +56,20 @@ describe('layout da janela de permuta', () => {
       '[Ilha Hee-Mo',
     ]);
     expect(linhas.map((l) => l.restante)).toEqual([5, 0, 5, 0, 5, 5]);
+  });
+
+  it('ignora a linha cortada no alto da lista', () => {
+    // A primeira linha só mostra "Restante:" e "Barganha:"; a ilha e os itens
+    // ficaram atrás do cabeçalho, cujo texto ("Nv. 4 -> Nv. 5") caía na faixa dela.
+    const linhas = extrairLinhasDePermuta(cortada);
+    expect(linhas.map((l) => l.ilhaTexto)).toEqual([
+      'Ilha de Orffs',
+      'Ilha de Baremi',
+      'Ilha de Ajir',
+      'Ilha de Pujara',
+      'Ilha de Theonil',
+      'Ilha de Padix',
+    ]);
   });
 
   it('a altura do dígito acompanha a escala da janela', () => {

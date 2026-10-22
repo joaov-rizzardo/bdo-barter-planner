@@ -57,6 +57,8 @@ const LINHA_POR_TEXTO = 3.4;
 const ehBarganha = (texto: string) => /^\W{0,3}\w?arg[ae]n/i.test(texto);
 const ehRestante = (texto: string) => /^\W{0,3}\w?est?ante/i.test(texto);
 const soNumero = (texto: string) => /^[\d\s.,]+$/.test(texto.trim());
+/** Texto com cara de nome (3 letras ou mais), e não um pedaço de ícone. */
+const temNome = (texto: string) => (texto.match(/\p{L}/gu)?.length ?? 0) >= 3;
 
 function mediana(valores: number[]): number {
   const ordenados = [...valores].sort((a, b) => a - b);
@@ -100,7 +102,9 @@ function agruparY(ys: number[], tolerancia: number): number[] {
  * Reconstrói as linhas da lista de permutas a partir das linhas soltas do
  * OCR. Cada troca é ancorada em "Restante:" (coluna da ilha) e em
  * "Barganha:" (abaixo do item de entrada): basta uma das duas ser lida.
- * Linhas cortadas na borda da janela (sem nenhuma das duas) ficam de fora.
+ * Linhas cortadas na borda da janela ficam de fora: sem nenhuma das duas
+ * âncoras (corte embaixo) ou sem o nome da ilha e do item de entrada, que
+ * ficam no alto da linha (corte em cima).
  */
 export function extrairLinhasDePermuta(linhas: readonly LinhaOcr[]): LinhaDePermuta[] {
   const barganhas = linhas.filter((l) => ehBarganha(l.texto));
@@ -126,7 +130,7 @@ export function extrairLinhasDePermuta(linhas: readonly LinhaOcr[]): LinhaDePerm
       ? mediana(barganhas.map((b) => b.x0))
       : mediana(restantes.map((r) => r.x0)) + RESTANTE_ATE_BARGANHA * h;
 
-  return ys.map((by) => {
+  const linhasDePermuta = ys.map((by) => {
     const naFaixa = linhas.filter(
       (l) => l.y0 >= by - FAIXA_ACIMA * h && l.y0 < by + FAIXA_ABAIXO * h,
     );
@@ -174,4 +178,5 @@ export function extrairLinhasDePermuta(linhas: readonly LinhaOcr[]): LinhaDePerm
       geometria: { bx, by, h },
     };
   });
+  return linhasDePermuta.filter((l) => temNome(l.ilhaTexto) || temNome(l.entradaTexto));
 }
