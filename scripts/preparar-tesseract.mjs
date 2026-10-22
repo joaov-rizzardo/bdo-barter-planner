@@ -7,13 +7,18 @@
  * - `core/*.wasm.js`: as variantes LSTM do núcleo (o tesseract escolhe pela
  *   presença de SIMD), copiadas de `tesseract.js-core`;
  * - `lang/por.traineddata.gz`: versionado no repositório; se faltar, é baixado.
+ *   O app lê o `lang/por.traineddata` descompactado aqui: o descompactador que
+ *   o worker embute (zlibjs) usa o `Buffer` do Node e quebra no navegador. No
+ *   `npm run dev` isso não aparecia porque o Vite serve o `.gz` com
+ *   `Content-Encoding: gzip`; o Tauri entrega os bytes crus.
  *
  * Roda sozinho antes de `npm run dev` e `npm run build` (predev/prebuild).
  */
 import { build } from 'esbuild';
-import { copyFile, mkdir, stat, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
+import { gunzipSync } from 'node:zlib';
 
 const require = createRequire(import.meta.url);
 const DESTINO = 'public/tesseract';
@@ -58,5 +63,6 @@ if (!(await existe(IDIOMA))) {
   if (!resposta.ok) throw new Error(`Falha ao baixar o idioma: HTTP ${resposta.status}`);
   await writeFile(IDIOMA, Buffer.from(await resposta.arrayBuffer()));
 }
+await writeFile(IDIOMA.replace(/\.gz$/, ''), gunzipSync(await readFile(IDIOMA)));
 
 console.log('tesseract.js pronto em public/tesseract/');

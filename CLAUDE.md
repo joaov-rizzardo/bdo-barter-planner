@@ -326,7 +326,10 @@ restante). Usado na tela (botão "Importar de prints" no Planejamento) e no scri
 - **Tesseract offline**: `scripts/preparar-tesseract.mjs` (roda no `predev`/`prebuild`) gera
   `public/tesseract/worker.min.js` com o esbuild (o pacote v7 não publica o worker do
   navegador; o padrão seria a CDN) e copia as 3 variantes LSTM do núcleo `.wasm.js`. Os dois
-  ficam no `.gitignore`; o idioma `public/tesseract/lang/por.traineddata.gz` é versionado.
+  ficam no `.gitignore`; o idioma `public/tesseract/lang/por.traineddata.gz` é versionado, e o
+  script grava ao lado o `por.traineddata` descompactado, que é o que o app lê (`gzip: false`): o
+  gunzip embutido no worker (zlibjs) usa o `Buffer` do Node e quebrava no Tauri com "Buffer is not
+  defined" (no `npm run dev` o Vite serve o `.gz` já descompactado, então o erro não aparece).
   `criarLeitorDePrints()` usa só esses caminhos locais (`workerBlobURL: false`) e reaproveita
   um worker entre as prints (~4–6 s por print no navegador). Só o tesseract roda em worker; o
   preparo da imagem e o casamento travam a tela ~360 ms por print (medido na de 1403 px), por

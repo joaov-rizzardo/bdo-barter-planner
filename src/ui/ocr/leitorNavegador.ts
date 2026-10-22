@@ -112,6 +112,8 @@ export function criarLeitorDePrints(): LeitorDePrints {
       workerPath: arquivoDoTesseract('worker.min.js'),
       corePath: arquivoDoTesseract('core'),
       langPath: arquivoDoTesseract('lang'),
+      // Idioma já descompactado (ver `scripts/preparar-tesseract.mjs`).
+      gzip: false,
       // Carrega o worker direto da URL local (o padrão embrulha num blob).
       workerBlobURL: false,
       logger: ({ status, progress }) => {

@@ -8,3 +8,4 @@ tsconfig.tsbuildinfo
 *.traineddata
 public/tesseract/worker.min.js
 public/tesseract/core/
+public/tesseract/lang/por.traineddata
