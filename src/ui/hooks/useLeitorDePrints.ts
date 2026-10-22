@@ -16,6 +16,8 @@ export interface PrintNaFila {
   estado: EstadoDaPrint;
   resultado?: ResultadoDaPrint | undefined;
   erro?: string | undefined;
+  /** Etapa da leitura em andamento ("Lendo o texto… 40%"). */
+  etapa?: string | undefined;
 }
 
 interface LeitorState {
@@ -97,11 +99,13 @@ export const useLeitorDePrints = create<LeitorState>((set, get) => {
         for (const [i, print] of aLer.entries()) {
           if (minha !== geracao) return;
           set({ progresso: { atual: i + 1, total: aLer.length } });
-          atualizar(print.id, { estado: 'lendo', erro: undefined });
+          atualizar(print.id, { estado: 'lendo', erro: undefined, etapa: undefined });
           try {
-            const resultado = await atual.ler(print.arquivo);
+            const resultado = await atual.ler(print.arquivo, (etapa) => {
+              if (minha === geracao) atualizar(print.id, { etapa });
+            });
             if (minha !== geracao) return;
-            atualizar(print.id, { estado: 'pronta', resultado });
+            atualizar(print.id, { estado: 'pronta', resultado, etapa: undefined });
             // A troca entra na revisão assim que a print termina, sem esperar as outras.
             const plano = usePlanStore.getState().trades;
             set((s) => ({
@@ -113,7 +117,7 @@ export const useLeitorDePrints = create<LeitorState>((set, get) => {
             }));
           } catch (erro) {
             if (minha !== geracao) return;
-            atualizar(print.id, { estado: 'erro', erro: mensagemDeErro(erro) });
+            atualizar(print.id, { estado: 'erro', erro: mensagemDeErro(erro), etapa: undefined });
           }
         }
       } finally {

@@ -132,7 +132,9 @@ export function AreaDePrints({
                   >
                     {p.estado === 'pronta'
                       ? `${p.resultado?.trocas.length ?? 0} troca(s) encontrada(s)`
-                      : ROTULO_DO_ESTADO[p.estado]}
+                      : p.estado === 'lendo' && p.etapa
+                        ? p.etapa
+                        : ROTULO_DO_ESTADO[p.estado]}
                   </p>
                 </div>
                 <button

@@ -61,9 +61,36 @@ function paraCanvas(imagem: ImagemCrua): HTMLCanvasElement {
   return canvas;
 }
 
+/** Etapas que o tesseract.js informa no `logger`, em português. */
+const ETAPAS: Record<string, string> = {
+  'loading tesseract core': 'Carregando o leitor',
+  'initializing tesseract': 'Iniciando o leitor',
+  'loading language traineddata': 'Carregando o idioma',
+  'initializing api': 'Iniciando o leitor',
+  'recognizing text': 'Lendo o texto',
+};
+
+/** Prazo para carregar o tesseract (núcleo + idioma) e para ler uma print. */
+const PRAZO_CARREGAR_MS = 90_000;
+const PRAZO_LER_MS = 180_000;
+
+class PrazoEsgotado extends Error {}
+
+/** Rejeita se `promessa` não terminar em `ms` (o tesseract.js não tem timeout próprio). */
+function comPrazo<T>(promessa: Promise<T>, ms: number, mensagem: string): Promise<T> {
+  let relogio: ReturnType<typeof setTimeout> | undefined;
+  const prazo = new Promise<never>((_, rejeitar) => {
+    relogio = setTimeout(() => rejeitar(new PrazoEsgotado(mensagem)), ms);
+  });
+  return Promise.race([promessa, prazo]).finally(() => clearTimeout(relogio));
+}
+
+/** Etapa da leitura em andamento, para a tela mostrar onde está. */
+export type AoProgredir = (etapa: string) => void;
+
 export interface LeitorDePrints {
   /** Lê as trocas de uma print. O tesseract é carregado na primeira chamada. */
-  ler: (arquivo: Blob) => Promise<ResultadoDaPrint>;
+  ler: (arquivo: Blob, aoProgredir?: AoProgredir) => Promise<ResultadoDaPrint>;
   /** Libera o worker do tesseract. */
   encerrar: () => Promise<void>;
 }
@@ -71,42 +98,73 @@ export interface LeitorDePrints {
 /** Leitor de prints com um worker do tesseract.js reaproveitado entre as leituras. */
 export function criarLeitorDePrints(): LeitorDePrints {
   let worker: Promise<Worker> | null = null;
+  let aoProgredir: AoProgredir | undefined;
+
+  /** Derruba o worker (travado ou com erro): a próxima leitura carrega de novo. */
+  const descartarWorker = (atual: Promise<Worker>) => {
+    if (worker === atual) worker = null;
+    atual.then((w) => w.terminate()).catch(() => undefined);
+  };
 
   const obterWorker = () => {
-    worker ??= (async () => {
-      try {
-        const novo = await createWorker('por', OEM.LSTM_ONLY, {
-          workerPath: arquivoDoTesseract('worker.min.js'),
-          corePath: arquivoDoTesseract('core'),
-          langPath: arquivoDoTesseract('lang'),
-          // Carrega o worker direto da URL local (o padrão embrulha num blob).
-          workerBlobURL: false,
-        });
-        await novo.setParameters({ tessedit_pageseg_mode: PSM.SPARSE_TEXT });
-        return novo;
-      } catch {
-        // A próxima leitura tenta carregar de novo.
-        worker = null;
-        throw new Error(
-          'Não foi possível carregar o leitor de texto. Rode "npm run dev" ou "npm run build" ' +
-            'de novo para gerar os arquivos em public/tesseract/.',
-        );
-      }
-    })();
-    return worker;
+    if (worker) return worker;
+    const novo = createWorker('por', OEM.LSTM_ONLY, {
+      workerPath: arquivoDoTesseract('worker.min.js'),
+      corePath: arquivoDoTesseract('core'),
+      langPath: arquivoDoTesseract('lang'),
+      // Carrega o worker direto da URL local (o padrão embrulha num blob).
+      workerBlobURL: false,
+      logger: ({ status, progress }) => {
+        const etapa = ETAPAS[status];
+        if (etapa) aoProgredir?.(`${etapa}… ${Math.round(progress * 100)}%`);
+      },
+      errorHandler: (erro: unknown) => console.error('[tesseract]', erro),
+    }).then(async (w) => {
+      await w.setParameters({ tessedit_pageseg_mode: PSM.SPARSE_TEXT });
+      return w;
+    });
+    const atual = comPrazo(
+      novo,
+      PRAZO_CARREGAR_MS,
+      'O leitor de texto não terminou de carregar em 90 s.',
+    ).catch((erro: unknown) => {
+      console.error('[tesseract] falha ao carregar', erro);
+      descartarWorker(novo);
+      if (worker === atual) worker = null;
+      throw erro instanceof PrazoEsgotado
+        ? erro
+        : new Error(
+            'Não foi possível carregar o leitor de texto. Rode "npm run dev" ou "npm run build" ' +
+              'de novo para gerar os arquivos em public/tesseract/.',
+          );
+    });
+    worker = atual;
+    return atual;
   };
 
   const lerTexto: LerTexto = async (imagem) => {
-    const { data } = await (
-      await obterWorker()
-    ).recognize(paraCanvas(imagem), {}, { blocks: true });
-    return linhasDosBlocos(data.blocks);
+    const atual = obterWorker();
+    const w = await atual;
+    try {
+      const { data } = await comPrazo(
+        w.recognize(paraCanvas(imagem), {}, { blocks: true }),
+        PRAZO_LER_MS,
+        'A leitura do texto passou de 3 minutos e foi interrompida.',
+      );
+      return linhasDosBlocos(data.blocks);
+    } catch (erro) {
+      console.error('[tesseract] falha ao ler', erro);
+      descartarWorker(atual);
+      throw erro;
+    }
   };
 
   return {
-    ler: async (arquivo) => {
+    ler: async (arquivo, progredir) => {
+      aoProgredir = progredir;
       const { data, items } = loadGameData();
       const imagem = await imagemDoArquivo(arquivo);
+      console.info(`[leitor] print de ${imagem.largura}×${imagem.altura} px`);
       return lerTrocasDaPrint(
         imagem,
         lerTexto,
